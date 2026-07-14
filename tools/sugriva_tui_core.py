@@ -177,30 +177,55 @@ def run_tui(stdscr):
 
     threading.Thread(target=simulator_loop, daemon=True).start()
 
+    last_sh, last_sw = 0, 0
+    win_header = None
+    win_telemetry = None
+    win_ledger = None
+    win_sandbox = None
+    win_inspector = None
+    win_shell = None
+
     while is_running:
         sh, sw = stdscr.getmaxyx()
-        stdscr.erase()
 
         if sh < 24 or sw < 80:
+            stdscr.erase()
             stdscr.addstr(0, 0, f"Screen size too small: {sw}x{sh}. Expand to 80x24.", curses.color_pair(2))
             stdscr.refresh()
             time.sleep(0.2)
             continue
 
-        # Coordinate allocations
+        if sh != last_sh or sw != last_sw:
+            stdscr.clear()
+            last_sh, last_sw = sh, sw
+            
+            header_h = 3
+            shell_h = 3
+            col_w = sw // 2
+            top_pane_h = (sh - header_h - shell_h) // 2
+            bottom_pane_h = sh - header_h - shell_h - top_pane_h
+
+            win_header = curses.newwin(header_h, sw, 0, 0)
+            win_telemetry = curses.newwin(top_pane_h, col_w, header_h, 0)
+            win_ledger = curses.newwin(bottom_pane_h, col_w, header_h + top_pane_h, 0)
+            win_sandbox = curses.newwin(top_pane_h, sw - col_w, header_h, col_w)
+            win_inspector = curses.newwin(bottom_pane_h, sw - col_w, header_h + top_pane_h, col_w)
+            win_shell = curses.newwin(shell_h, sw, sh - shell_h, 0)
+
+        # Clear individual windows instead of entire stdscr
+        win_header.erase()
+        win_telemetry.erase()
+        win_ledger.erase()
+        win_sandbox.erase()
+        win_inspector.erase()
+        win_shell.erase()
+
+        # Coordinate allocations for rendering
         header_h = 3
         shell_h = 3
         col_w = sw // 2
         top_pane_h = (sh - header_h - shell_h) // 2
         bottom_pane_h = sh - header_h - shell_h - top_pane_h
-
-        # Setup windows
-        win_header = curses.newwin(header_h, sw, 0, 0)
-        win_telemetry = curses.newwin(top_pane_h, col_w, header_h, 0)
-        win_ledger = curses.newwin(bottom_pane_h, col_w, header_h + top_pane_h, 0)
-        win_sandbox = curses.newwin(top_pane_h, sw - col_w, header_h, col_w)
-        win_inspector = curses.newwin(bottom_pane_h, sw - col_w, header_h + top_pane_h, col_w)
-        win_shell = curses.newwin(shell_h, sw, sh - shell_h, 0)
 
         # Header Box
         win_header.box()
