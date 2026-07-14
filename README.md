@@ -29,6 +29,9 @@ Project Sugriva is a high-throughput cyber-financial threat detection and teleme
                                   v
                     [ Sugriva Diagnostic Sandbox ]
                        [ Authentication Core ]
+                                  |
+                                  v
+                   [ Enterprise Rearchitecture Grid ]
 ```
 
 ## Core Modules & Functionalities
@@ -75,7 +78,13 @@ Project Sugriva is a high-throughput cyber-financial threat detection and teleme
 *   **High-Precision Resource Profiler:** Integrates `tracemalloc` and platform-aware `resource` tracking to output exact memory allocation deltas, peak memory usage, and user/system CPU processing latency during active neural analytics convolution passes.
 *   **IPC Communication Bus:** Exposes a localhost TCP JSON-RPC endpoint to pipe telemetry metrics directly into standard console views.
 
-### 8. Interactive Curses Dashboard Terminal UI (`tools/sugriva_terminal_ui.py`)
+### 8. Enterprise Rearchitecture Grid (`app/enterprise_rearchitecture.py`)
+*   **Decoupled Async Inference Worker Pool:** Decouples GNN forward pass and SHAP computation from the primary streaming thread via an asynchronous queues processing system (`InferenceWorkerPool`).
+*   **Distributed Graph Database Connector:** Replaces the single-threaded in-memory NetworkX canvas with a thread-safe, distributed Neo4j/Memgraph driver using bolt connection protocol (`Neo4jGraphConnector`).
+*   **Circuit Breaker & Redis State Manager:** Protects outbound third-party KYC calls (DigiLocker Sandbox) using a fault-tolerant Circuit Breaker pattern. Restores auth states post-network dropout via Redis TTL keys (300 seconds).
+*   **Dynamic Vault Tokenization:** Uses dynamic rotation wheels to derive salted keys combining the system secret, clearing networks (e.g., UPI, Visa, PayPal), and index matrices to secure PII.
+
+### 9. Interactive Curses Dashboard Terminal UI (`tools/sugriva_terminal_ui.py`)
 An interactive, multi-pane terminal dashboard to monitor system security operations and ingest telemetry in real-time.
 *   **Telemetry Stream (Top-Left):** Visualizes live ingestion across UPI, NEFT, and RTGS rails.
 *   **Ledger Surface (Bottom-Left):** Displays VPA-specific accounts velocity, IP coordinates, and rails.
@@ -163,10 +172,13 @@ When running the **Terminal UI Dashboard** (`tools/sugriva_terminal_ui.py`), the
 | Command | Action | Example |
 |---|---|---|
 | `help` | Shows command menu and guide | (Displays menu in the right pane when idle) |
-| `diagnose` / `status` | Runs dynamic health checks on SQLite, Redis, Elasticsearch, and the API server | `diagnose` |
+| `diagnose` / `status` | Runs dynamic health checks on SQLite, Redis, Elasticsearch, and the API server, as well as the new Neo4j, InferencePool, and Circuit Breaker components | `diagnose` |
 | `fetch <vpa>` | Inspects telemetry history, risk score, and SHAP XAI metrics for a specific sender VPA | `fetch user_2984@bank` |
+| `tokenise <vpa> <net>` | Tests dynamic vault tokenization for a VPA on a specific clearing network (e.g. NPCI, VISA-NET) | `tokenise test@bank NPCI` |
+| `breaker [trip/reset]` | Manually trips (sets to OPEN) or resets (sets to CLOSED) the mock DigiLocker sandbox circuit breaker | `breaker trip` |
 | `inject <vpa> <amount> <ip> [SUCCESS/FAILED]` | Spoof/injects a custom transaction into the telemetry pipeline | `inject attacker@bank 850000 10.0.0.1 FAILED` |
 | `set threshold <float>` | Updates the dynamic risk threshold on the fly for coloring logs and isolation trigger | `set threshold 0.65` |
 | `clear` | Wipes current visual log buffers in the UI | `clear` |
 | `exit` | Gracefully closes the dashboard wrapper | `exit` |
 | `1` / `2` / `3` | Shortcut keys: Press to inject predefined credential stuffing (`1`), treasury liquidation (`2`), or velocity flood (`3`) spoof attacks | (Press single key `1` in the terminal) |
+

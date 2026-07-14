@@ -1,6 +1,7 @@
 import curses
 import os
 import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import time
 import json
 import random
@@ -14,6 +15,17 @@ import redis
 from elasticsearch import Elasticsearch
 import urllib.request
 import socket
+import asyncio
+
+from app.enterprise_rearchitecture import (
+    InferenceWorkerPool,
+    Neo4jGraphConnector,
+    CircuitBreaker,
+    CircuitBreakerOpenException,
+    DynamicVaultTokenization,
+    HAS_NEO4J,
+    HAS_REDIS
+)
 
 telemetry_logs = []
 anomaly_logs = []
@@ -23,6 +35,12 @@ inspected_data = None
 cmd_buffer = ""
 threshold = 0.75
 diagnostics_results = None
+vault_tok = DynamicVaultTokenization()
+cb = CircuitBreaker("DigiLockerSandbox", failure_threshold=3, recovery_timeout=10.0)
+worker_pool = InferenceWorkerPool(num_workers=4)
+neo4j_connector = Neo4jGraphConnector()
+worker_loop_ref = None
+inspected_token_info = None
 lock = threading.Lock()
 
 def get_simulated_risk_and_shap(ip, auth_status, amount, velocity, waf_level, payment_rail):
@@ -62,6 +80,45 @@ def update_velocity(vpa, ts):
     velocity_cache[vpa] = [t for t in velocity_cache[vpa] if ts - t <= 3.0]
     return len(velocity_cache[vpa])
 
+def on_inference_complete(task):
+    global threshold, worker_loop_ref, neo4j_connector
+    with lock:
+        telemetry_logs.append(task)
+        if len(telemetry_logs) > 200:
+            telemetry_logs.pop(0)
+        if task["analytics_mesh"]["risk_score"] >= threshold:
+            task["analytics_mesh"]["anomaly_isolated"] = True
+            anomaly_logs.append(task)
+            if len(anomaly_logs) > 100:
+                anomaly_logs.pop(0)
+                
+    if HAS_NEO4J and worker_loop_ref:
+        asyncio.run_coroutine_threadsafe(
+            neo4j_connector.create_parent_bridge_node(
+                task["telemetry_id"],
+                task["cyber_telemetry"]["source_ip"],
+                task["financial_ledger"]["sender_vpa"],
+                task["financial_ledger"]["receiver_vpa"]
+            ),
+            worker_loop_ref
+        )
+
+def worker_pool_thread_func():
+    global worker_loop_ref, worker_pool
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        worker_loop_ref = loop
+        
+        async def run_pool():
+            await worker_pool.start(on_inference_complete)
+            while True:
+                await asyncio.sleep(1)
+                
+        loop.run_until_complete(run_pool())
+    except Exception:
+        pass
+
 def generate_transaction(vpa=None, payment_rail=None, amount=None, ip=None, auth_status="SUCCESS", waf_level="NONE"):
     rails = ["NEFT", "RTGS", "UPI", "VISA", "MASTERCARD", "PAYPAL"]
     clearing = ["RBI", "NPCI", "VISA-NET", "MC-NET", "PAYPAL-NET"]
@@ -81,10 +138,58 @@ def generate_transaction(vpa=None, payment_rail=None, amount=None, ip=None, auth
         
     net = "INTERNATIONAL" if payment_rail in ["VISA", "PAYPAL"] else "DOMESTIC"
     fp = random.choice(agents)
+    clearing_net = random.choice(clearing) if net == "DOMESTIC" else "CROSSBORDER"
+    receiver_vpa = f"recipient_{random.randint(1000, 9999)}@bank"
     
-    global threshold
+    global threshold, worker_loop_ref, worker_pool, cb, vault_tok
     
     velocity = update_velocity(vpa, ts)
+    
+    # 1. Simulate Outbound KYC Protected by Circuit Breaker
+    try:
+        async def mock_kyc_lookup():
+            if auth_status == "FAILED" and random.random() < 0.35:
+                raise ConnectionError("DigiLocker Sandbox Timeout")
+            return "KYC_OK"
+        if worker_loop_ref and worker_loop_ref.is_running():
+            asyncio.run_coroutine_threadsafe(cb.call(mock_kyc_lookup), worker_loop_ref)
+    except Exception:
+        pass
+
+    # 2. Derive Vault-Based token for PII
+    tokenized_sender = vault_tok.tokenize_vpa(vpa, clearing_net)
+
+    # 3. If worker pool is running, dispatch tasks asynchronously
+    if worker_loop_ref and worker_loop_ref.is_running():
+        ip_val = sum(int(x) for x in ip.split('.') if x.isdigit()) % 255
+        auth_val = 1.0 if auth_status == "SUCCESS" else 0.0
+        amt_val = float(amount)
+        features = [float(ip_val), auth_val, amt_val, float(velocity)]
+        
+        task_payload = {
+            "telemetry_id": t_id,
+            "timestamp": datetime.fromtimestamp(ts).isoformat() + "Z",
+            "features": features,
+            "cyber_telemetry": {
+                "source_ip": ip,
+                "auth_status": auth_status,
+                "device_fingerprint": fp,
+                "waf_alert_level": waf_level
+            },
+            "financial_ledger": {
+                "payment_rail": payment_rail,
+                "clearing_network": clearing_net,
+                "transaction_type": "TRANSFER",
+                "amount": amount,
+                "sender_vpa": tokenized_sender,
+                "receiver_vpa": receiver_vpa,
+                "velocity_score": float(velocity)
+            }
+        }
+        asyncio.run_coroutine_threadsafe(worker_pool.submit_task(task_payload), worker_loop_ref)
+        return None
+
+    # Fallback to inline processing
     risk, shap = get_simulated_risk_and_shap(ip, auth_status, amount, velocity, waf_level, payment_rail)
     
     payload = {
@@ -98,11 +203,11 @@ def generate_transaction(vpa=None, payment_rail=None, amount=None, ip=None, auth
         },
         "financial_ledger": {
             "payment_rail": payment_rail,
-            "clearing_network": random.choice(clearing) if net == "DOMESTIC" else "CROSSBORDER",
+            "clearing_network": clearing_net,
             "transaction_type": "TRANSFER",
             "amount": amount,
-            "sender_vpa": vpa,
-            "receiver_vpa": f"recipient_{random.randint(1000, 9999)}@bank",
+            "sender_vpa": tokenized_sender,
+            "receiver_vpa": receiver_vpa,
             "velocity_score": float(velocity)
         },
         "crypto_routing": {
@@ -308,7 +413,7 @@ def run_diagnostics():
     diagnostics_results = status
 
 def draw_dashboard(stdscr):
-    global cmd_buffer, inspected_account, inspected_data, threshold, diagnostics_results
+    global cmd_buffer, inspected_account, inspected_data, threshold, diagnostics_results, inspected_token_info
     curses.curs_set(0)
     stdscr.nodelay(True)
     
@@ -321,6 +426,7 @@ def draw_dashboard(stdscr):
     threading.Thread(target=simulator_loop, daemon=True).start()
     threading.Thread(target=sse_listener_loop, daemon=True).start()
     threading.Thread(target=db_poller_loop, daemon=True).start()
+    threading.Thread(target=worker_pool_thread_func, daemon=True).start()
     
     win_header = None
     win_telemetry = None
@@ -449,6 +555,12 @@ def draw_dashboard(stdscr):
                     for k, v in inspected_data["shap"].items():
                         win_diagnostic.addstr(idx, 4, f"{k}: {v:.4f}")
                         idx += 1
+                elif inspected_token_info:
+                    win_diagnostic.addstr(1, 2, "Dynamic Vault Tokenization Output:", curses.color_pair(4) | curses.A_BOLD)
+                    win_diagnostic.addstr(3, 2, f"Source VPA  : {inspected_token_info['vpa']}")
+                    win_diagnostic.addstr(4, 2, f"Network     : {inspected_token_info['net']}")
+                    win_diagnostic.addstr(6, 2, f"Derived Token: {inspected_token_info['token']}", curses.color_pair(1) | curses.A_BOLD)
+                    win_diagnostic.addstr(8, 2, "Press any key to dismiss token details.")
                 else:
                     if diagnostics_results:
                         win_diagnostic.addstr(1, 2, "Live System Health Diagnostics:", curses.color_pair(4) | curses.A_BOLD)
@@ -456,17 +568,22 @@ def draw_dashboard(stdscr):
                         win_diagnostic.addstr(4, 2, f"Redis Cache  : {diagnostics_results.get('redis', 'N/A')}")
                         win_diagnostic.addstr(5, 2, f"Elasticsearch: {diagnostics_results.get('elasticsearch', 'N/A')}")
                         win_diagnostic.addstr(6, 2, f"API Server   : {diagnostics_results.get('api_server', 'N/A')}")
-                        win_diagnostic.addstr(7, 2, f"Cur Threshold: {threshold:.2f}")
-                        win_diagnostic.addstr(9, 2, "Press any key to dismiss diagnostics.")
+                        win_diagnostic.addstr(7, 2, f"Neo4j Graph  : {'ONLINE' if HAS_NEO4J else 'DISABLED (ImportError)'}")
+                        win_diagnostic.addstr(8, 2, f"InferencePool: ACTIVE ({worker_pool.num_workers} workers)")
+                        win_diagnostic.addstr(9, 2, f"DigiLocker CB: {cb.state}", curses.color_pair(2 if cb.state == 'OPEN' else 1))
+                        win_diagnostic.addstr(10, 2, f"Cur Threshold: {threshold:.2f}")
+                        win_diagnostic.addstr(12, 2, "Press any key to dismiss diagnostics.")
                     else:
                         win_diagnostic.addstr(1, 2, f"System Active (Risk Threshold: {threshold:.2f})")
                         win_diagnostic.addstr(3, 2, "Interactive Command Console Menu:")
                         win_diagnostic.addstr(4, 2, "  fetch <vpa>              Inspect account telemetry")
                         win_diagnostic.addstr(5, 2, "  inject <vpa> <amt> <ip>  Manually spoof transaction")
-                        win_diagnostic.addstr(6, 2, "  set threshold <val>      Change threshold (e.g. 0.65)")
-                        win_diagnostic.addstr(7, 2, "  diagnose                 Run live network diagnostics")
-                        win_diagnostic.addstr(8, 2, "  clear                    Reset telemetry logs buffer")
-                        win_diagnostic.addstr(9, 2, "  exit                     Quit Sugriva terminal dashboard")
+                        win_diagnostic.addstr(6, 2, "  tokenise <vpa> <net>     Test dynamic vault tokenization")
+                        win_diagnostic.addstr(7, 2, "  set threshold <val>      Change threshold (e.g. 0.65)")
+                        win_diagnostic.addstr(8, 2, "  breaker [trip/reset]     Force circuit breaker states")
+                        win_diagnostic.addstr(9, 2, "  diagnose                 Run live network diagnostics")
+                        win_diagnostic.addstr(10, 2, "  clear                    Reset telemetry logs buffer")
+                        win_diagnostic.addstr(11, 2, "  exit                     Quit Sugriva terminal dashboard")
                 win_diagnostic.noutrefresh()
             
             # 6. Command Shell (Bottom-Row)
@@ -485,6 +602,8 @@ def draw_dashboard(stdscr):
             if ch != -1:
                 if diagnostics_results is not None:
                     diagnostics_results = None
+                elif inspected_token_info is not None:
+                    inspected_token_info = None
                 elif ch == ord('1'):
                     threading.Thread(target=trigger_credential_stuffing, daemon=True).start()
                 elif ch == ord('2'):
@@ -502,6 +621,7 @@ def draw_dashboard(stdscr):
                     elif cmd in ["diagnose", "status"]:
                         inspected_account = None
                         inspected_data = None
+                        inspected_token_info = None
                         threading.Thread(target=run_diagnostics, daemon=True).start()
                     elif cmd == "clear":
                         with lock:
@@ -509,11 +629,31 @@ def draw_dashboard(stdscr):
                             anomaly_logs.clear()
                         inspected_account = None
                         inspected_data = None
+                        inspected_token_info = None
                     elif cmd.startswith("set threshold "):
                         try:
                             threshold = float(cmd.split(" ")[2])
                         except Exception:
                             pass
+                    elif cmd == "breaker trip":
+                        cb.state = 'OPEN'
+                        cb.last_state_change = time.time()
+                    elif cmd == "breaker reset":
+                        cb.state = 'CLOSED'
+                        cb.failure_count = 0
+                    elif cmd.startswith("tokenise "):
+                        parts = cmd.split(" ")
+                        if len(parts) >= 3:
+                            vpa_arg = parts[1]
+                            net_arg = parts[2]
+                            derived_token = vault_tok.tokenize_vpa(vpa_arg, net_arg)
+                            inspected_token_info = {
+                                "vpa": vpa_arg,
+                                "net": net_arg,
+                                "token": derived_token
+                            }
+                            inspected_account = None
+                            inspected_data = None
                     elif cmd.startswith("inject "):
                         parts = cmd.split(" ")
                         if len(parts) >= 4:
@@ -545,6 +685,9 @@ def draw_dashboard(stdscr):
             pass
             
         time.sleep(0.05)
+
+    if worker_loop_ref and worker_loop_ref.is_running():
+        asyncio.run_coroutine_threadsafe(worker_pool.stop(), worker_loop_ref)
 
 if __name__ == "__main__":
     try:
