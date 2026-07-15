@@ -71,13 +71,13 @@ class SugivaRiskPanel(Vertical):
 
         # Dynamic Auth Unicode Status Graph
         yield Label("AUTH ROUTING TELEMETRY", id="auth-graph-header", classes="graph-header")
-        yield Label("Pass:    [░░░░░░░░░░░░░░░] (0)", id="graph-pass", classes="graph-row")
-        yield Label("Step-up: [░░░░░░░░░░░░░░░] (0)", id="graph-step", classes="graph-row")
+        yield Label("Pass:    |░░░░░░░░░░░░░░░| (0)", id="graph-pass", classes="graph-row")
+        yield Label("Step-up: |░░░░░░░░░░░░░░░| (0)", id="graph-step", classes="graph-row")
 
         # Dynamic Threat & Detections Unicode Status Graph
         yield Label("THREAT & QUANTUM DETECTIONS", id="threat-graph-header", classes="graph-header")
-        yield Label("Blocks:  [░░░░░░░░░░░░░░░] (0)", id="graph-blocks", classes="graph-row")
-        yield Label("Quantum: [░░░░░░░░░░░░░░░] (0)", id="graph-quantum", classes="graph-row")
+        yield Label("Blocks:  |░░░░░░░░░░░░░░░| (0)", id="graph-blocks", classes="graph-row")
+        yield Label("Quantum: |░░░░░░░░░░░░░░░| (0)", id="graph-quantum", classes="graph-row")
 
     def on_mount(self) -> None:
         tracemalloc.start()
@@ -127,16 +127,16 @@ class SugivaRiskPanel(Vertical):
         w_blocks = min(15, int(threat_cnt / total * 15)) if threat_cnt > 0 else 0
         w_quantum = min(15, quantum_cnt) # raw count scaling for quantum hits
         
-        # Update Unicode Graph elements with correct Rich formatting
+        # Update Unicode Graph elements with correct Rich formatting using pipes to avoid markup conflicts
         self.query_one("#graph-pass", Label).update(
-            f"Pass:    [ [green]{'█' * w_pass}{'░' * (15 - w_pass)}[/green] ] ({clear_cnt})"
+            f"Pass:    | [green]{'█' * w_pass}{'░' * (15 - w_pass)}[/green] | ({clear_cnt})"
         )
         self.query_one("#graph-step", Label).update(
-            f"Step-up: [ [yellow]{'█' * w_step}{'░' * (15 - w_step)}[/yellow] ] ({pending_cnt})"
+            f"Step-up: | [yellow]{'█' * w_step}{'░' * (15 - w_step)}[/yellow] | ({pending_cnt})"
         )
         self.query_one("#graph-blocks", Label).update(
-            f"Blocks:  [ [red]{'█' * w_blocks}{'░' * (15 - w_blocks)}[/red] ] ({threat_cnt})"
+            f"Blocks:  | [red]{'█' * w_blocks}{'░' * (15 - w_blocks)}[/red] | ({threat_cnt})"
         )
         self.query_one("#graph-quantum", Label).update(
-            f"Quantum: [ [cyan]{'█' * w_quantum}{'░' * (15 - w_quantum)}[/cyan] ] ({quantum_cnt})"
+            f"Quantum: | [cyan]{'█' * w_quantum}{'░' * (15 - w_quantum)}[/cyan] | ({quantum_cnt})"
         )
