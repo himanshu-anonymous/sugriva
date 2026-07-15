@@ -30,7 +30,7 @@ class AuditPane(Horizontal):
     AuditPane #incident-title {
         height: 1;
         background: $surface;
-        color: $accent-orange;
+        color: $accent;
         text-style: bold;
         padding-left: 1;
     }
