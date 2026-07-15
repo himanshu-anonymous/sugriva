@@ -4,7 +4,7 @@ import time
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Label, ProgressBar
-from tui.widgets.sugriva.engine import TxRecord, get_records
+from tui.widgets.sugriva.engine import TxRecord, get_records, get_telemetry_stats
 
 
 class SugivaRiskPanel(Vertical):
@@ -34,15 +34,21 @@ class SugivaRiskPanel(Vertical):
         height: 1;
         margin-bottom: 1;
     }
-    SugivaRiskPanel #sandbox-header {
+    SugivaRiskPanel .graph-header {
         text-style: bold;
         margin-top: 2;
         margin-bottom: 1;
+    }
+    SugivaRiskPanel #auth-graph-header {
         color: $success;
     }
-    SugivaRiskPanel .sandbox-row {
+    SugivaRiskPanel #threat-graph-header {
+        color: $error;
+    }
+    SugivaRiskPanel .graph-row {
         height: 1;
         color: $text;
+        font-family: monospace;
     }
     """
 
@@ -64,11 +70,15 @@ class SugivaRiskPanel(Vertical):
         yield Label("Post-Quantum Agility Risk", classes="shap-label")
         yield ProgressBar(total=1.0, show_eta=False, id="bar-pq")
 
-        yield Label("Sandbox Runtime", id="sandbox-header")
-        yield Label("Memory Delta: -- B", id="sb-mem", classes="sandbox-row")
-        yield Label("CPU Latency: -- ms", id="sb-cpu", classes="sandbox-row")
-        yield Label("Ledger Rows: 2,000,000", id="sb-rows", classes="sandbox-row")
-        yield Label("Cluster: ONLINE", id="sb-cluster", classes="sandbox-row")
+        # Dynamic Auth Unicode Status Graph
+        yield Label("AUTH ROUTING TELEMETRY", id="auth-graph-header", classes="graph-header")
+        yield Label("Pass:    [░░░░░░░░░░░░░░░] (0)", id="graph-pass", classes="graph-row")
+        yield Label("Step-up: [░░░░░░░░░░░░░░░] (0)", id="graph-step", classes="graph-row")
+
+        # Dynamic Threat & Detections Unicode Status Graph
+        yield Label("THREAT & QUANTUM DETECTIONS", id="threat-graph-header", classes="graph-header")
+        yield Label("Blocks:  [░░░░░░░░░░░░░░░] (0)", id="graph-blocks", classes="graph-row")
+        yield Label("Quantum: [░░░░░░░░░░░░░░░] (0)", id="graph-quantum", classes="graph-row")
 
     def on_mount(self) -> None:
         tracemalloc.start()
@@ -94,19 +104,40 @@ class SugivaRiskPanel(Vertical):
             ("bar-ip", "ip_anomaly"),
             ("bar-auth", "auth_discrepancy"),
             ("bar-vel", "velocity_impact"),
-            ("bar-pq", "pq_agility"),
+            ("bar-pq", "pqc_decryption_anomalies"),
         ]:
-            bar = self.query_one(f"#{bar_id}", ProgressBar)
-            val = shap.get(key, 0.0)
-            bar.update(progress=val)
+            try:
+                bar = self.query_one(f"#{bar_id}", ProgressBar)
+                val = shap.get(key, 0.0)
+                bar.update(progress=val)
+            except Exception:
+                pass
 
-        snapshot = tracemalloc.take_snapshot()
-        stats = snapshot.statistics("lineno")
-        mem_delta = sum(s.size for s in stats[:10]) if stats else 0
-
-        t1 = time.perf_counter()
-        cpu_ms = (t1 - self._t0) * 1000.0
-        self._t0 = t1
-
-        self.query_one("#sb-mem", Label).update(f"Memory Delta: {mem_delta:+,} B")
-        self.query_one("#sb-cpu", Label).update(f"CPU Latency: {cpu_ms:.2f} ms")
+        # Query stats from SQLite for Unicode graphs
+        stats = get_telemetry_stats()
+        clear_cnt = stats["clear"]
+        pending_cnt = stats["pending"]
+        threat_cnt = stats["threats"]
+        quantum_cnt = stats["quantum"]
+        
+        total = max(1, clear_cnt + pending_cnt + threat_cnt)
+        
+        # Scale to max 15 blocks
+        w_pass = min(15, int(clear_cnt / total * 15)) if clear_cnt > 0 else 0
+        w_step = min(15, int(pending_cnt / total * 15)) if pending_cnt > 0 else 0
+        w_blocks = min(15, int(threat_cnt / total * 15)) if threat_cnt > 0 else 0
+        w_quantum = min(15, quantum_cnt) # raw count scaling for quantum hits
+        
+        # Update Unicode Graph elements
+        self.query_one("#graph-pass", Label).update(
+            f"Pass:    [[green]{'█' * w_pass}{'░' * (15 - w_pass)}[/green]] ({clear_cnt})"
+        )
+        self.query_one("#graph-step", Label).update(
+            f"Step-up: [[yellow]{'█' * w_step}{'░' * (15 - w_step)}[/yellow]] ({pending_cnt})"
+        )
+        self.query_one("#graph-blocks", Label).update(
+            f"Blocks:  [[red]{'█' * w_blocks}{'░' * (15 - w_blocks)}[/red]] ({threat_cnt})"
+        )
+        self.query_one("#graph-quantum", Label).update(
+            f"Quantum: [[cyan]{'█' * w_quantum}{'░' * (15 - w_quantum)}[/cyan]] ({quantum_cnt})"
+        )

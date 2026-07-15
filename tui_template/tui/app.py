@@ -288,12 +288,24 @@ class MainScreen(Screen[None]):
                     self.notify(f"Threshold set to {val}", title="Config Updated")
                 except Exception:
                     self.notify("Invalid threshold value", title="Error", severity="error")
+        elif cmd.startswith("unfreeze "):
+            if get_role() != "ADMIN":
+                write_audit("Unauthorized attempt to unfreeze VPA", status="DENIED")
+                self.notify("Access Denied: ADMIN role required.", title="Security Warning", severity="error")
+            else:
+                from tui.widgets.sugriva.engine import unfreeze_vpa
+                vpa = cmd.split(" ", 1)[1].strip()
+                if unfreeze_vpa(vpa):
+                    self.notify(f"VPA {vpa} successfully unfrozen", title="Security Override")
+                else:
+                    self.notify(f"VPA {vpa} is not currently frozen", title="Security Override", severity="warning")
         elif cmd == "help":
             help_msg = (
                 "Sugriva Analyst Console Commands:\n"
                 "  login admin <password> - Switch to ADMIN (pwd: adminpassword)\n"
                 "  login analyst          - Switch to ANALYST (view-only)\n"
                 "  fetch <vpa>            - Search accounts and fetch graph nodes\n"
+                "  unfreeze <vpa>         - Release quarantine locks on frozen VPA (ADMIN)\n"
                 "  breaker [trip/reset]   - Toggle security circuit breaker (ADMIN)\n"
                 "  set threshold <float>  - Update risk isolation boundary (ADMIN)\n"
                 "  help                   - Display this guide menu"

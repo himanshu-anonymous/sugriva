@@ -84,6 +84,9 @@ _cert_in_incidents: list[CertInIncident] = []
 _rate_limits: dict[str, list[float]] = {}
 _blocked_until: dict[str, float] = {}
 
+# Dynamic Quarantine Registry (VPA -> quarantine expiry epoch)
+_quarantined_until: dict[str, float] = {}
+
 # Active Quantum-Defense state parameters
 _qkd_coherence: float = 99.4
 _trng_entropy: float = 100.0
@@ -227,6 +230,20 @@ def check_rate_limit(vpa: str) -> bool:
     return True
 
 
+def unfreeze_vpa(vpa: str) -> bool:
+    unfrozen = False
+    with _lock:
+        if vpa in _quarantined_until:
+            del _quarantined_until[vpa]
+            unfrozen = True
+        if vpa in _blocked_until:
+            del _blocked_until[vpa]
+            unfrozen = True
+    if unfrozen:
+        write_audit(f"VPA {vpa} manually unfrozen and security locks released")
+    return unfrozen
+
+
 def get_quantum_metrics() -> tuple[float, float, int]:
     global _qkd_coherence, _trng_entropy, _pqc_failures
     return _qkd_coherence, _trng_entropy, _pqc_failures
@@ -251,13 +268,11 @@ def _compute(
     trng_entropy: float,
     pqc_failures: int
 ) -> tuple[float, dict[str, float]]:
-    # Traditional weights
     ip_w = round(0.15 + random.uniform(-0.02, 0.04), 4)
     auth_w = round(0.5 + random.uniform(0, 0.1), 4) if auth_failed else round(0.05 + random.uniform(0, 0.03), 4)
     amt_w = round(min(0.3, amount / 500_000.0), 4)
     vel_w = round(min(0.4, velocity / 10.0), 4)
     
-    # Active Quantum Telemetry Threat weights (Dynamic detection injection)
     qkd_w = round(max(0.0, (99.0 - qkd_coherence) * 0.1), 4)
     entropy_w = round(max(0.0, (100.0 - trng_entropy) * 0.005), 4)
     pqc_w = round(min(0.4, pqc_failures * 0.15), 4)
@@ -294,6 +309,37 @@ def _make_record(
     velocity = velocity if velocity is not None else random.randint(1, 4)
     ip = ip or f"192.168.{random.randint(0, 3)}.{random.randint(1, 254)}"
 
+    # Check active quarantine registry freeze
+    now_time = time.time()
+    if vpa in _quarantined_until:
+        if now_time < _quarantined_until[vpa]:
+            rec = TxRecord(
+                timestamp=datetime.now().strftime("%H:%M:%S.%f")[:-3],
+                rail=rail,
+                network="BLOCKED",
+                amount=amount,
+                risk=1.0000,
+                escrow="AUTO_FROZEN",
+                vpa=vpa,
+                ip=ip,
+                velocity=velocity,
+                shap={"ip_anomaly": 0.0, "auth_discrepancy": 0.0, "velocity_impact": 0.0, "quantum_channel_instability": 0.0, "entropy_drain": 0.0, "pqc_decryption_anomalies": 0.0},
+            )
+            try:
+                conn = sqlite3.connect(DB_PATH)
+                cursor = conn.cursor()
+                cursor.execute(
+                    "INSERT INTO tx_ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (rec.timestamp, rec.rail, rec.network, rec.amount, rec.risk, rec.escrow, rec.vpa, rec.ip, rec.velocity, json.dumps(rec.shap))
+                )
+                conn.commit()
+                conn.close()
+            except Exception:
+                pass
+            return rec
+        else:
+            del _quarantined_until[vpa]
+
     allowed = check_rate_limit(vpa)
     
     if not allowed:
@@ -316,6 +362,9 @@ def _make_record(
         
         if score >= RISK_CRITICAL:
             escrow = "ISOLATED"
+            # Auto-freeze: Lock the VPA in quarantine for 300 seconds
+            _quarantined_until[vpa] = now_time + 300.0
+            write_audit(f"Critical Risk score ({score:.4f}) detected. VPA {vpa} automatically FROZEN and quarantined for 300s", status="AUTO_FREEZE")
         elif score >= RISK_ELEVATED:
             escrow = "PENDING"
         else:
@@ -353,7 +402,6 @@ def _make_record(
 def _sim_loop() -> None:
     global _running, _qkd_coherence, _trng_entropy, _pqc_failures
     while _running:
-        # Slowly fluctuate baseline quantum values to simulate channel noise
         if random.random() > 0.8:
             _qkd_coherence = max(95.0, min(99.9, _qkd_coherence + random.uniform(-0.15, 0.15)))
             _trng_entropy = max(40.0, min(100.0, _trng_entropy + random.uniform(-2.0, 2.0)))
@@ -475,3 +523,31 @@ def inject_quantum_exploit() -> None:
     target = "demat_vault@treasury"
     _make_record(vpa=target, rail="RTGS", amount=12_000_000.0, velocity=1, auth_failed=False, ip="198.51.100.99")
     create_cert_incident(target, "RTGS", 12_000_000.0, "CRITICAL", "Post-Quantum Signature Spoofing Attempt")
+
+
+def get_telemetry_stats() -> dict[str, int]:
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT count(*) FROM tx_ledger WHERE escrow = 'CLEAR'")
+        clear_cnt = cursor.fetchone()[0] or 0
+        
+        cursor.execute("SELECT count(*) FROM tx_ledger WHERE escrow = 'PENDING'")
+        pending_cnt = cursor.fetchone()[0] or 0
+        
+        cursor.execute("SELECT count(*) FROM tx_ledger WHERE escrow = 'ISOLATED' OR escrow = 'RATE_LIMITED' OR escrow = 'AUTO_FROZEN'")
+        threat_cnt = cursor.fetchone()[0] or 0
+        
+        cursor.execute("SELECT count(*) FROM tx_ledger WHERE risk >= 0.75 AND (network = 'BLOCKED' OR vpa LIKE '%vault%')")
+        quantum_threats = cursor.fetchone()[0] or 0
+        
+        conn.close()
+        return {
+            "clear": clear_cnt,
+            "pending": pending_cnt,
+            "threats": threat_cnt,
+            "quantum": quantum_threats
+        }
+    except Exception:
+        return {"clear": 0, "pending": 0, "threats": 0, "quantum": 0}
