@@ -4,6 +4,10 @@ import math
 import random
 import threading
 import time
+import sqlite3
+import json
+import hashlib
+import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -15,6 +19,10 @@ RISK_CRITICAL: float = 0.75
 RISK_ELEVATED: float = 0.50
 
 AUDIT_LOG_PATH = "data/sugriva_audit.log"
+DB_PATH = "data/sugriva_ledger.db"
+
+SALT = b"sugriva_master_salt"
+MASTER_HASH = hashlib.pbkdf2_hmac("sha256", b"adminpassword", SALT, 100000).hex()
 
 
 @dataclass
@@ -61,7 +69,6 @@ class CertInIncident:
         return f"{hours}h {minutes}m {seconds}s"
 
 
-_store: list[TxRecord] = []
 _lock: threading.Lock = threading.Lock()
 _running: bool = False
 _thread: threading.Thread | None = None
@@ -77,16 +84,64 @@ _cert_in_incidents: list[CertInIncident] = []
 _rate_limits: dict[str, list[float]] = {}
 _blocked_until: dict[str, float] = {}
 
+_last_audit_hash: str = "0" * 64
+
+
+def _init_db() -> None:
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS tx_ledger (
+            timestamp TEXT,
+            rail TEXT,
+            network TEXT,
+            amount REAL,
+            risk REAL,
+            escrow TEXT,
+            vpa TEXT,
+            ip TEXT,
+            velocity INTEGER,
+            shap TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+def _init_audit_chain() -> None:
+    global _last_audit_hash
+    if os.path.exists(AUDIT_LOG_PATH):
+        try:
+            with open(AUDIT_LOG_PATH, "r") as f:
+                lines = f.readlines()
+                if lines:
+                    last_line = lines[-1].strip()
+                    match = re.search(r"curr_hash: ([a-f0-9]{64})", last_line)
+                    if match:
+                        _last_audit_hash = match.group(1)
+        except Exception:
+            pass
+
+
+def verify_admin_password(password: str) -> bool:
+    h = hashlib.pbkdf2_hmac("sha256", password.encode(), SALT, 100000).hex()
+    return h == MASTER_HASH
+
 
 def write_audit(action: str, status: str = "SUCCESS") -> None:
+    global _last_audit_hash
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-    entry = f"[{ts}] [ROLE:{_current_role}] ACTION: {action} | STATUS: {status}"
+    raw_payload = f"{ts} | ROLE:{_current_role} | ACTION: {action} | STATUS: {status} | prev_hash: {_last_audit_hash}"
+    curr_hash = hashlib.sha256(raw_payload.encode()).hexdigest()
+    entry = f"[{ts}] [ROLE:{_current_role}] ACTION: {action} | STATUS: {status} | prev_hash: {_last_audit_hash} | curr_hash: {curr_hash}"
+    
     with _lock:
         _audit_log.append(entry)
         if len(_audit_log) > 500:
             _audit_log.pop(0)
+        _last_audit_hash = curr_hash
 
-    # Immutable local file write
     try:
         os.makedirs(os.path.dirname(AUDIT_LOG_PATH), exist_ok=True)
         with open(AUDIT_LOG_PATH, "a") as f:
@@ -146,23 +201,18 @@ def create_cert_incident(vpa: str, rail: str, amount: float, severity: str, sour
 
 
 def check_rate_limit(vpa: str) -> bool:
-    """Rate limit: Max 3 requests per 5 seconds. Returns True if transaction is allowed, False if blocked."""
     now = time.time()
-    
-    # Check if currently blocked
     if vpa in _blocked_until:
         if now < _blocked_until[vpa]:
             return False
         else:
             del _blocked_until[vpa]
 
-    # Initialize or clean timestamps older than 5 seconds
     if vpa not in _rate_limits:
         _rate_limits[vpa] = []
     _rate_limits[vpa] = [t for t in _rate_limits[vpa] if now - t < 5.0]
 
     if len(_rate_limits[vpa]) >= 3:
-        # Block VPA for next 10 seconds
         _blocked_until[vpa] = now + 10.0
         write_audit(f"Rate limit exceeded for VPA: {vpa}. Blocking user for 10s.", status="BLOCKED")
         create_cert_incident(vpa, "DDoS/Flood", 0, "CRITICAL", "Rate Limiter Gate")
@@ -209,12 +259,10 @@ def _make_record(
     velocity = velocity if velocity is not None else random.randint(1, 4)
     ip = ip or f"192.168.{random.randint(0, 3)}.{random.randint(1, 254)}"
 
-    # Rate Limiting check
     allowed = check_rate_limit(vpa)
     
     if not allowed:
-        # Return blocked entry
-        return TxRecord(
+        rec = TxRecord(
             timestamp=datetime.now().strftime("%H:%M:%S.%f")[:-3],
             rail=rail,
             network="BLOCKED",
@@ -226,45 +274,58 @@ def _make_record(
             velocity=velocity,
             shap={"ip_anomaly": 0.3, "auth_discrepancy": 0.5, "velocity_impact": 0.4, "pq_agility": 0.35},
         )
-
-    cross = rail in ("Visa", "Mastercard", "PayPal") and random.random() > 0.6
-    network = random.choice(CROSS_NETS) if cross else random.choice(DOMESTIC_NETS)
-    score, shap = _compute(amount, velocity, auth_failed)
-    
-    if score >= RISK_CRITICAL:
-        escrow = "ISOLATED"
-    elif score >= RISK_ELEVATED:
-        escrow = "PENDING"
     else:
-        escrow = "CLEAR"
+        cross = rail in ("Visa", "Mastercard", "PayPal") and random.random() > 0.6
+        network = random.choice(CROSS_NETS) if cross else random.choice(DOMESTIC_NETS)
+        score, shap = _compute(amount, velocity, auth_failed)
         
-    return TxRecord(
-        timestamp=datetime.now().strftime("%H:%M:%S.%f")[:-3],
-        rail=rail,
-        network=network,
-        amount=amount,
-        risk=score,
-        escrow=escrow,
-        vpa=vpa,
-        ip=ip,
-        velocity=velocity,
-        shap=shap,
-    )
+        if score >= RISK_CRITICAL:
+            escrow = "ISOLATED"
+        elif score >= RISK_ELEVATED:
+            escrow = "PENDING"
+        else:
+            escrow = "CLEAR"
+            
+        rec = TxRecord(
+            timestamp=datetime.now().strftime("%H:%M:%S.%f")[:-3],
+            rail=rail,
+            network=network,
+            amount=amount,
+            risk=score,
+            escrow=escrow,
+            vpa=vpa,
+            ip=ip,
+            velocity=velocity,
+            shap=shap,
+        )
+
+    # Insert into persistent SQLite
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO tx_ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (rec.timestamp, rec.rail, rec.network, rec.amount, rec.risk, rec.escrow, rec.vpa, rec.ip, rec.velocity, json.dumps(rec.shap))
+        )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+    return rec
 
 
 def _sim_loop() -> None:
     global _running
     while _running:
-        rec = _make_record()
-        with _lock:
-            _store.append(rec)
-            if len(_store) > 500:
-                _store.pop(0)
+        _make_record()
         time.sleep(random.uniform(0.3, 0.7))
 
 
 def start_simulator() -> None:
     global _running, _thread
+    _init_db()
+    _init_audit_chain()
     if _running:
         return
     _running = True
@@ -287,43 +348,72 @@ def get_rail_filter() -> str | None:
 
 
 def get_records(rail_filter: str | None = None) -> list[TxRecord]:
-    with _lock:
-        records = list(_store)
-    if rail_filter:
-        records = [r for r in records if r.rail == rail_filter]
-    return records
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        if rail_filter:
+            cursor.execute("SELECT timestamp, rail, network, amount, risk, escrow, vpa, ip, velocity, shap FROM tx_ledger WHERE rail = ? ORDER BY rowid DESC LIMIT 500", (rail_filter,))
+        else:
+            cursor.execute("SELECT timestamp, rail, network, amount, risk, escrow, vpa, ip, velocity, shap FROM tx_ledger ORDER BY rowid DESC LIMIT 500")
+        rows = cursor.fetchall()
+        conn.close()
+        
+        records = []
+        for r in reversed(rows):
+            records.append(TxRecord(
+                timestamp=r[0],
+                rail=r[1],
+                network=r[2],
+                amount=r[3],
+                risk=r[4],
+                escrow=r[5],
+                vpa=r[6],
+                ip=r[7],
+                velocity=r[8],
+                shap=json.loads(r[9])
+            ))
+        return records
+    except Exception:
+        return []
 
 
 def get_risk_counts() -> dict[str, int]:
-    with _lock:
-        records = list(_store)
-    counts: dict[str, int] = {"CRITICAL": 0, "ELEVATED": 0, "PASS": 0}
-    for r in records:
-        counts[r.risk_tier] += 1
-    return counts
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT risk FROM tx_ledger ORDER BY rowid DESC LIMIT 500")
+        rows = cursor.fetchall()
+        conn.close()
+        
+        counts = {"CRITICAL": 0, "ELEVATED": 0, "PASS": 0}
+        for r in rows:
+            risk = r[0]
+            if risk >= RISK_CRITICAL:
+                counts["CRITICAL"] += 1
+            elif risk >= RISK_ELEVATED:
+                counts["ELEVATED"] += 1
+            else:
+                counts["PASS"] += 1
+        return counts
+    except Exception:
+        return {"CRITICAL": 0, "ELEVATED": 0, "PASS": 0}
 
 
 def inject_credential_stuffing() -> None:
     target = _make_vpa()
     ip = "198.51.100.42"
     for i in range(5):
-        rec = _make_record(vpa=target, rail="UPI", amount=random.uniform(50, 200),
-                           velocity=i + 1, auth_failed=True, ip=ip)
-        with _lock:
-            _store.append(rec)
-    final = _make_record(vpa=target, rail="Visa", amount=950_000.0, velocity=6,
-                         auth_failed=False, ip=ip)
-    with _lock:
-        _store.append(final)
+        _make_record(vpa=target, rail="UPI", amount=random.uniform(50, 200),
+                     velocity=i + 1, auth_failed=True, ip=ip)
+    _make_record(vpa=target, rail="Visa", amount=950_000.0, velocity=6,
+                 auth_failed=False, ip=ip)
     create_cert_incident(target, "Visa", 950_000.0, "HIGH", "Credential Stuffing Pattern")
 
 
 def inject_asset_liquidation() -> None:
     target = "gsec_vault@corp"
-    rec = _make_record(vpa=target, rail="RTGS", amount=5_000_000.0,
-                       velocity=1, auth_failed=False, ip="203.0.113.88")
-    with _lock:
-        _store.append(rec)
+    _make_record(vpa=target, rail="RTGS", amount=5_000_000.0,
+                 velocity=1, auth_failed=False, ip="203.0.113.88")
     create_cert_incident(target, "RTGS", 5_000_000.0, "CRITICAL", "Unauthorized Corporate Liquidation")
 
 
@@ -331,8 +421,6 @@ def inject_velocity_flood() -> None:
     target = _make_vpa()
     ip = "192.168.1.99"
     for i in range(12):
-        rec = _make_record(vpa=target, rail="UPI", amount=100.0,
-                           velocity=i + 1, auth_failed=False, ip=ip)
-        with _lock:
-            _store.append(rec)
+        _make_record(vpa=target, rail="UPI", amount=100.0,
+                     velocity=i + 1, auth_failed=False, ip=ip)
         time.sleep(0.01)

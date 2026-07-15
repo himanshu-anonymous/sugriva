@@ -228,17 +228,30 @@ class MainScreen(Screen[None]):
 
     @on(Input.Submitted, selector="#query-input")
     def handle_query_submitted(self, event: Input.Submitted) -> None:
-        from tui.widgets.sugriva.engine import get_role, set_role, set_threshold, write_audit
         cmd = event.value.strip()
         event.input.clear()
+        if cmd:
+            self.run_command_async(cmd)
+
+    @work(thread=True)
+    def run_command_async(self, cmd: str) -> None:
+        from tui.widgets.sugriva.engine import get_role, set_role, set_threshold, write_audit, verify_admin_password
         
         if cmd.startswith("login "):
-            role = cmd.split(" ", 1)[1].strip().upper()
-            if role in ("ADMIN", "ANALYST"):
-                set_role(role)
-                self.notify(f"Authentication tier: {role}", title="Access Granted")
+            parts = cmd.split(" ")
+            if len(parts) >= 3 and parts[1].lower() == "admin":
+                password = parts[2]
+                if verify_admin_password(password):
+                    set_role("ADMIN")
+                    self.notify("Authentication tier: ADMIN", title="Access Granted")
+                else:
+                    write_audit("Failed login attempt as ADMIN (incorrect password)", status="DENIED")
+                    self.notify("Invalid Password: Access Denied", title="Security Warning", severity="error")
+            elif len(parts) >= 2 and parts[1].lower() == "analyst":
+                set_role("ANALYST")
+                self.notify("Authentication tier: ANALYST", title="Access Granted")
             else:
-                self.notify("Invalid role. Select ADMIN or ANALYST", title="Access Denied", severity="error")
+                self.notify("Usage: 'login admin <password>' or 'login analyst'", title="Error", severity="error")
         elif cmd.startswith("fetch "):
             vpa = cmd.split(" ", 1)[1].strip()
             self.notify(f"Fetching topology for {vpa}", title="Mesh Query")
@@ -271,7 +284,8 @@ class MainScreen(Screen[None]):
         elif cmd == "help":
             help_msg = (
                 "Sugriva Analyst Console Commands:\n"
-                "  login [ADMIN/ANALYST] - Switch authentication roles\n"
+                "  login admin <password> - Switch to ADMIN (pwd: adminpassword)\n"
+                "  login analyst          - Switch to ANALYST (view-only)\n"
                 "  fetch <vpa>            - Search accounts and fetch graph nodes\n"
                 "  breaker [trip/reset]   - Toggle security circuit breaker (ADMIN)\n"
                 "  set threshold <float>  - Update risk isolation boundary (ADMIN)\n"
@@ -279,7 +293,7 @@ class MainScreen(Screen[None]):
             )
             self.notify(help_msg, title="Analyst Help Guide", severity="information")
             write_audit("Requested help instructions")
-        elif cmd:
+        else:
             self.notify(f"Unknown command: {cmd}", title="Error", severity="error")
 
     def action_inject_stuffing(self) -> None:
