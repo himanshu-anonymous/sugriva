@@ -1,0 +1,75 @@
+@import "./variables.css";
+
+/* Reset and Layout */
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Grid Layout */
+.dashboard-grid {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* Form inputs & interactive widgets */
+input, button, select {
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+/* Utilities */
+.flat-border {
+  border: var(--border-default);
+}
+
+.orange-border {
+  border: var(--border-highlight);
+}
+
+.success-badge {
+  background-color: var(--success-bg);
+  color: var(--success-color);
+  border: var(--border-success);
+  padding: 2px 6px;
+  font-size: 11px;
+}
+
+.warning-badge {
+  background-color: var(--warning-bg);
+  color: var(--warning-color);
+  border: var(--border-default);
+  padding: 2px 6px;
+  font-size: 11px;
+}
+
+.error-badge {
+  background-color: var(--error-bg);
+  color: var(--error-color);
+  border: var(--border-error);
+  padding: 2px 6px;
+  font-size: 11px;
+}

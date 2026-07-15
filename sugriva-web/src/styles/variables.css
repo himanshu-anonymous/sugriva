@@ -1,0 +1,38 @@
+:root {
+  --bg-primary: #ffffff;
+  --bg-surface: #fcfcfc;
+  --bg-surface-active: #f0f0f0;
+  
+  --border-default: 1px solid #e0e0e0;
+  --border-highlight: 1px solid #ff6600;
+  --border-success: 1px solid #009933;
+  --border-error: 1px solid #ff3333;
+
+  --color-text: #1a1a1a;
+  --color-text-muted: #666666;
+  
+  --accent-primary: #ff6600; /* Safety Orange */
+  
+  --success-color: #009933;
+  --success-bg: #e6ffe6;
+  
+  --warning-color: #ff9900;
+  --warning-bg: #fff5e6;
+  
+  --error-color: #ff3333;
+  --error-bg: #ffe6e6;
+  
+  --quantum-color: #0088cc;
+  --quantum-bg: #e6f7ff;
+
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  user-select: none;
+}
