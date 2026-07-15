@@ -14,7 +14,7 @@ class AuditPane(Horizontal):
     AuditPane #audit-left-col {
         width: 1fr;
         height: 1fr;
-        border-right: solid $border-mid;
+        border-right: solid $border;
     }
     AuditPane #audit-right-col {
         width: 1fr;

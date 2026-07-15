@@ -27,7 +27,7 @@ class ContextBar(Horizontal):
         text-style: bold;
         content-align: center middle;
         height: 3;
-        border-left: solid $border-mid;
+        border-left: solid $border;
     }
     ContextBar #query-input {
         width: 1fr;
