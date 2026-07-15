@@ -84,6 +84,11 @@ _cert_in_incidents: list[CertInIncident] = []
 _rate_limits: dict[str, list[float]] = {}
 _blocked_until: dict[str, float] = {}
 
+# Active Quantum-Defense state parameters
+_qkd_coherence: float = 99.4
+_trng_entropy: float = 100.0
+_pqc_failures: int = 0
+
 _last_audit_hash: str = "0" * 64
 
 
@@ -222,22 +227,51 @@ def check_rate_limit(vpa: str) -> bool:
     return True
 
 
+def get_quantum_metrics() -> tuple[float, float, int]:
+    global _qkd_coherence, _trng_entropy, _pqc_failures
+    return _qkd_coherence, _trng_entropy, _pqc_failures
+
+
+def set_quantum_anomalies(coherence: float, entropy: float, failures: int) -> None:
+    global _qkd_coherence, _trng_entropy, _pqc_failures
+    _qkd_coherence = coherence
+    _trng_entropy = entropy
+    _pqc_failures = failures
+
+
 def _sigmoid(x: float) -> float:
     return 1.0 / (1.0 + math.exp(-x))
 
 
-def _compute(amount: float, velocity: int, auth_failed: bool) -> tuple[float, dict[str, float]]:
+def _compute(
+    amount: float, 
+    velocity: int, 
+    auth_failed: bool,
+    qkd_coherence: float,
+    trng_entropy: float,
+    pqc_failures: int
+) -> tuple[float, dict[str, float]]:
+    # Traditional weights
     ip_w = round(0.15 + random.uniform(-0.02, 0.04), 4)
     auth_w = round(0.5 + random.uniform(0, 0.1), 4) if auth_failed else round(0.05 + random.uniform(0, 0.03), 4)
     amt_w = round(min(0.3, amount / 500_000.0), 4)
     vel_w = round(min(0.4, velocity / 10.0), 4)
-    raw = 0.1 + ip_w + auth_w + amt_w + vel_w
+    
+    # Active Quantum Telemetry Threat weights (Dynamic detection injection)
+    qkd_w = round(max(0.0, (99.0 - qkd_coherence) * 0.1), 4)
+    entropy_w = round(max(0.0, (100.0 - trng_entropy) * 0.005), 4)
+    pqc_w = round(min(0.4, pqc_failures * 0.15), 4)
+    
+    raw = 0.1 + ip_w + auth_w + amt_w + vel_w + qkd_w + entropy_w + pqc_w
     score = round(_sigmoid(raw), 6)
+    
     return score, {
         "ip_anomaly": ip_w,
         "auth_discrepancy": auth_w,
         "velocity_impact": vel_w,
-        "pq_agility": round(min(0.3, score * 0.35), 4),
+        "quantum_channel_instability": qkd_w,
+        "entropy_drain": entropy_w,
+        "pqc_decryption_anomalies": pqc_w,
     }
 
 
@@ -253,6 +287,7 @@ def _make_record(
     auth_failed: bool = False,
     ip: str | None = None,
 ) -> TxRecord:
+    global _qkd_coherence, _trng_entropy, _pqc_failures
     vpa = vpa or _make_vpa()
     rail = rail or random.choice(RAILS)
     amount = amount if amount is not None else random.uniform(100.0, 150_000.0)
@@ -272,12 +307,12 @@ def _make_record(
             vpa=vpa,
             ip=ip,
             velocity=velocity,
-            shap={"ip_anomaly": 0.3, "auth_discrepancy": 0.5, "velocity_impact": 0.4, "pq_agility": 0.35},
+            shap={"ip_anomaly": 0.3, "auth_discrepancy": 0.5, "velocity_impact": 0.4, "quantum_channel_instability": 0.2, "entropy_drain": 0.1, "pqc_decryption_anomalies": 0.2},
         )
     else:
         cross = rail in ("Visa", "Mastercard", "PayPal") and random.random() > 0.6
         network = random.choice(CROSS_NETS) if cross else random.choice(DOMESTIC_NETS)
-        score, shap = _compute(amount, velocity, auth_failed)
+        score, shap = _compute(amount, velocity, auth_failed, _qkd_coherence, _trng_entropy, _pqc_failures)
         
         if score >= RISK_CRITICAL:
             escrow = "ISOLATED"
@@ -316,8 +351,14 @@ def _make_record(
 
 
 def _sim_loop() -> None:
-    global _running
+    global _running, _qkd_coherence, _trng_entropy, _pqc_failures
     while _running:
+        # Slowly fluctuate baseline quantum values to simulate channel noise
+        if random.random() > 0.8:
+            _qkd_coherence = max(95.0, min(99.9, _qkd_coherence + random.uniform(-0.15, 0.15)))
+            _trng_entropy = max(40.0, min(100.0, _trng_entropy + random.uniform(-2.0, 2.0)))
+            if _pqc_failures > 0 and random.random() > 0.6:
+                _pqc_failures -= 1
         _make_record()
         time.sleep(random.uniform(0.3, 0.7))
 
@@ -424,3 +465,13 @@ def inject_velocity_flood() -> None:
         _make_record(vpa=target, rail="UPI", amount=100.0,
                      velocity=i + 1, auth_failed=False, ip=ip)
         time.sleep(0.01)
+
+
+def inject_quantum_exploit() -> None:
+    # Simulates active quantum attack indicators: drop coherence, drain entropy, raise pqc errors
+    global _qkd_coherence, _trng_entropy, _pqc_failures
+    write_audit("Quantum attack vectors detected (photon coherence breach & entropy exhaustion)", status="CRITICAL")
+    set_quantum_anomalies(91.2, 14.5, 4)
+    target = "demat_vault@treasury"
+    _make_record(vpa=target, rail="RTGS", amount=12_000_000.0, velocity=1, auth_failed=False, ip="198.51.100.99")
+    create_cert_incident(target, "RTGS", 12_000_000.0, "CRITICAL", "Post-Quantum Signature Spoofing Attempt")

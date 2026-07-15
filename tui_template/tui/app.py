@@ -150,6 +150,13 @@ class MainScreen(Screen[None]):
             id="attack-3",
         ),
         Binding(
+            "ctrl+4",
+            "inject_quantum",
+            "Quantum Attack",
+            tooltip="Trigger Post-Quantum signature spoofing & coherence collapse.",
+            id="attack-4",
+        ),
+        Binding(
             "ctrl+right",
             "next_tab",
             "Next Tab",
@@ -322,6 +329,15 @@ class MainScreen(Screen[None]):
             return
         threading.Thread(target=inject_velocity_flood, daemon=True).start()
         self.notify("Transaction velocity flood injected", title="Attack Sim [3]", severity="warning")
+
+    def action_inject_quantum(self) -> None:
+        from tui.widgets.sugriva.engine import get_role, write_audit, inject_quantum_exploit
+        if get_role() != "ADMIN":
+            write_audit("Unauthorized quantum exploit trigger attempt", status="DENIED")
+            self.notify("Access Denied: ADMIN role required.", title="Security Warning", severity="error")
+            return
+        threading.Thread(target=inject_quantum_exploit, daemon=True).start()
+        self.notify("Quantum signature spoofing & QKD coherence breach injected", title="Attack Sim [4]", severity="error")
 
     def action_toggle_rail_browser(self) -> None:
         try:
