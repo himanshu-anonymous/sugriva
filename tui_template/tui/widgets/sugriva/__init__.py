@@ -7,3 +7,4 @@ from tui.widgets.sugriva.risk_panel import SugivaRiskPanel
 from tui.widgets.sugriva.database_pane import DatabasePane
 from tui.widgets.sugriva.crypto_pane import CryptoEnginePane
 from tui.widgets.sugriva.quantum_pane import QuantumGuardPane
+from tui.widgets.sugriva.audit_pane import AuditPane

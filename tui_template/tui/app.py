@@ -59,6 +59,7 @@ from tui.widgets.sugriva.risk_panel import SugivaRiskPanel
 from tui.widgets.sugriva.database_pane import DatabasePane
 from tui.widgets.sugriva.crypto_pane import CryptoEnginePane
 from tui.widgets.sugriva.quantum_pane import QuantumGuardPane
+from tui.widgets.sugriva.audit_pane import AuditPane
 
 
 class AppHeader(Horizontal):
@@ -110,6 +111,8 @@ class SugivaWorkspace(Vertical):
                     yield CryptoEnginePane()
                 with TabPane("Quantum Guard", id="quantum-pane"):
                     yield QuantumGuardPane()
+                with TabPane("Incident & Audit", id="audit-pane"):
+                    yield AuditPane()
         with Vertical(id="right-panel"):
             yield SugivaRiskPanel()
 
@@ -225,27 +228,84 @@ class MainScreen(Screen[None]):
 
     @on(Input.Submitted, selector="#query-input")
     def handle_query_submitted(self, event: Input.Submitted) -> None:
+        from tui.widgets.sugriva.engine import get_role, set_role, set_threshold, write_audit
         cmd = event.value.strip()
         event.input.clear()
-        if cmd.startswith("fetch "):
+        
+        if cmd.startswith("login "):
+            role = cmd.split(" ", 1)[1].strip().upper()
+            if role in ("ADMIN", "ANALYST"):
+                set_role(role)
+                self.notify(f"Authentication tier: {role}", title="Access Granted")
+            else:
+                self.notify("Invalid role. Select ADMIN or ANALYST", title="Access Denied", severity="error")
+        elif cmd.startswith("fetch "):
             vpa = cmd.split(" ", 1)[1].strip()
             self.notify(f"Fetching topology for {vpa}", title="Mesh Query")
+            write_audit(f"Queried topology for: {vpa}")
         elif cmd == "breaker trip":
-            self.notify("Circuit breaker forced OPEN", title="Breaker", severity="warning")
+            if get_role() != "ADMIN":
+                write_audit("Unauthorized attempt to trip breaker", status="DENIED")
+                self.notify("Access Denied: ADMIN role required.", title="Security Warning", severity="error")
+            else:
+                write_audit("Manual breaker trip triggered")
+                self.notify("Circuit breaker forced OPEN", title="Breaker Status", severity="warning")
         elif cmd == "breaker reset":
-            self.notify("Circuit breaker reset to CLOSED", title="Breaker", severity="information")
+            if get_role() != "ADMIN":
+                write_audit("Unauthorized attempt to reset breaker", status="DENIED")
+                self.notify("Access Denied: ADMIN role required.", title="Security Warning", severity="error")
+            else:
+                write_audit("Manual breaker reset triggered")
+                self.notify("Circuit breaker reset to CLOSED", title="Breaker Status", severity="information")
+        elif cmd.startswith("set threshold "):
+            if get_role() != "ADMIN":
+                write_audit("Unauthorized attempt to change threshold", status="DENIED")
+                self.notify("Access Denied: ADMIN role required.", title="Security Warning", severity="error")
+            else:
+                try:
+                    val = float(cmd.split(" ")[2])
+                    set_threshold(val)
+                    self.notify(f"Threshold set to {val}", title="Config Updated")
+                except Exception:
+                    self.notify("Invalid threshold value", title="Error", severity="error")
+        elif cmd == "help":
+            help_msg = (
+                "Sugriva Analyst Console Commands:\n"
+                "  login [ADMIN/ANALYST] - Switch authentication roles\n"
+                "  fetch <vpa>            - Search accounts and fetch graph nodes\n"
+                "  breaker [trip/reset]   - Toggle security circuit breaker (ADMIN)\n"
+                "  set threshold <float>  - Update risk isolation boundary (ADMIN)\n"
+                "  help                   - Display this guide menu"
+            )
+            self.notify(help_msg, title="Analyst Help Guide", severity="information")
+            write_audit("Requested help instructions")
         elif cmd:
             self.notify(f"Unknown command: {cmd}", title="Error", severity="error")
 
     def action_inject_stuffing(self) -> None:
+        from tui.widgets.sugriva.engine import get_role, write_audit
+        if get_role() != "ADMIN":
+            write_audit("Unauthorized attack simulation trigger (stuffing)", status="DENIED")
+            self.notify("Access Denied: ADMIN role required.", title="Security Warning", severity="error")
+            return
         threading.Thread(target=inject_credential_stuffing, daemon=True).start()
         self.notify("Credential stuffing simulation injected", title="Attack Sim [1]", severity="warning")
 
     def action_inject_liquidation(self) -> None:
+        from tui.widgets.sugriva.engine import get_role, write_audit
+        if get_role() != "ADMIN":
+            write_audit("Unauthorized attack simulation trigger (liquidation)", status="DENIED")
+            self.notify("Access Denied: ADMIN role required.", title="Security Warning", severity="error")
+            return
         threading.Thread(target=inject_asset_liquidation, daemon=True).start()
         self.notify("Asset liquidation event injected", title="Attack Sim [2]", severity="error")
 
     def action_inject_flood(self) -> None:
+        from tui.widgets.sugriva.engine import get_role, write_audit
+        if get_role() != "ADMIN":
+            write_audit("Unauthorized attack simulation trigger (flood)", status="DENIED")
+            self.notify("Access Denied: ADMIN role required.", title="Security Warning", severity="error")
+            return
         threading.Thread(target=inject_velocity_flood, daemon=True).start()
         self.notify("Transaction velocity flood injected", title="Attack Sim [3]", severity="warning")
 
@@ -281,7 +341,7 @@ class MainScreen(Screen[None]):
     def action_next_tab(self) -> None:
         try:
             tabbed = self.query_one(TabbedContent)
-            tabs = ["telemetry-pane", "mesh-pane", "auth-pane", "db-pane", "crypto-pane", "quantum-pane"]
+            tabs = ["telemetry-pane", "mesh-pane", "auth-pane", "db-pane", "crypto-pane", "quantum-pane", "audit-pane"]
             current_idx = tabs.index(tabbed.active)
             next_idx = (current_idx + 1) % len(tabs)
             tabbed.active = tabs[next_idx]
@@ -291,7 +351,7 @@ class MainScreen(Screen[None]):
     def action_prev_tab(self) -> None:
         try:
             tabbed = self.query_one(TabbedContent)
-            tabs = ["telemetry-pane", "mesh-pane", "auth-pane", "db-pane", "crypto-pane", "quantum-pane"]
+            tabs = ["telemetry-pane", "mesh-pane", "auth-pane", "db-pane", "crypto-pane", "quantum-pane", "audit-pane"]
             current_idx = tabs.index(tabbed.active)
             prev_idx = (current_idx - 1) % len(tabs)
             tabbed.active = tabs[prev_idx]

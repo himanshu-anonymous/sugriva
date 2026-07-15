@@ -1,10 +1,11 @@
 from __future__ import annotations
+import os
 import math
 import random
 import threading
 import time
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 RAILS: list[str] = ["UPI", "NEFT", "RTGS", "Visa", "Mastercard", "PayPal"]
 DOMESTIC_NETS: list[str] = ["NPCI", "RBI-RTGS"]
@@ -12,6 +13,8 @@ CROSS_NETS: list[str] = ["VISA-NET", "MCTR-NET", "SWIFT-CROSS"]
 
 RISK_CRITICAL: float = 0.75
 RISK_ELEVATED: float = 0.50
+
+AUDIT_LOG_PATH = "data/sugriva_audit.log"
 
 
 @dataclass
@@ -36,11 +39,137 @@ class TxRecord:
         return "PASS"
 
 
+@dataclass
+class CertInIncident:
+    id: str
+    vpa: str
+    rail: str
+    amount: float
+    detection_time: datetime
+    sla_deadline: datetime
+    severity: str
+    source: str
+    status: str = "PENDING_REPORT"
+
+    @property
+    def time_remaining_str(self) -> str:
+        delta = self.sla_deadline - datetime.now()
+        if delta.total_seconds() <= 0:
+            return "EXPIRED (SLA BREACH)"
+        hours, remainder = divmod(int(delta.total_seconds()), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{hours}h {minutes}m {seconds}s"
+
+
 _store: list[TxRecord] = []
 _lock: threading.Lock = threading.Lock()
 _running: bool = False
 _thread: threading.Thread | None = None
 _active_rail_filter: str | None = None
+
+# Security, Audit, and CERT-In data
+_current_role: str = "ANALYST"
+_threshold: float = 0.75
+_audit_log: list[str] = []
+_cert_in_incidents: list[CertInIncident] = []
+
+# Rate Limiting: VPA -> list of timestamps
+_rate_limits: dict[str, list[float]] = {}
+_blocked_until: dict[str, float] = {}
+
+
+def write_audit(action: str, status: str = "SUCCESS") -> None:
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    entry = f"[{ts}] [ROLE:{_current_role}] ACTION: {action} | STATUS: {status}"
+    with _lock:
+        _audit_log.append(entry)
+        if len(_audit_log) > 500:
+            _audit_log.pop(0)
+
+    # Immutable local file write
+    try:
+        os.makedirs(os.path.dirname(AUDIT_LOG_PATH), exist_ok=True)
+        with open(AUDIT_LOG_PATH, "a") as f:
+            f.write(entry + "\n")
+    except Exception:
+        pass
+
+
+def get_audit_logs() -> list[str]:
+    with _lock:
+        return list(_audit_log)
+
+
+def get_role() -> str:
+    global _current_role
+    return _current_role
+
+
+def set_role(role: str) -> None:
+    global _current_role
+    _current_role = role
+    write_audit(f"Authentication role switched to {role}")
+
+
+def get_threshold() -> float:
+    global _threshold
+    return _threshold
+
+
+def set_threshold(val: float) -> None:
+    global _threshold
+    _threshold = val
+    write_audit(f"Risk threshold changed to {val}")
+
+
+def get_cert_incidents() -> list[CertInIncident]:
+    with _lock:
+        return list(_cert_in_incidents)
+
+
+def create_cert_incident(vpa: str, rail: str, amount: float, severity: str, source: str) -> None:
+    now = datetime.now()
+    inc_id = f"CERT-2026-{random.randint(1000, 9999)}"
+    inc = CertInIncident(
+        id=inc_id,
+        vpa=vpa,
+        rail=rail,
+        amount=amount,
+        detection_time=now,
+        sla_deadline=now + timedelta(hours=6),
+        severity=severity,
+        source=source,
+    )
+    with _lock:
+        _cert_in_incidents.append(inc)
+    write_audit(f"CERT-In incident logged: {inc_id} (VPA={vpa}, severity={severity})")
+
+
+def check_rate_limit(vpa: str) -> bool:
+    """Rate limit: Max 3 requests per 5 seconds. Returns True if transaction is allowed, False if blocked."""
+    now = time.time()
+    
+    # Check if currently blocked
+    if vpa in _blocked_until:
+        if now < _blocked_until[vpa]:
+            return False
+        else:
+            del _blocked_until[vpa]
+
+    # Initialize or clean timestamps older than 5 seconds
+    if vpa not in _rate_limits:
+        _rate_limits[vpa] = []
+    _rate_limits[vpa] = [t for t in _rate_limits[vpa] if now - t < 5.0]
+
+    if len(_rate_limits[vpa]) >= 3:
+        # Block VPA for next 10 seconds
+        _blocked_until[vpa] = now + 10.0
+        write_audit(f"Rate limit exceeded for VPA: {vpa}. Blocking user for 10s.", status="BLOCKED")
+        create_cert_incident(vpa, "DDoS/Flood", 0, "CRITICAL", "Rate Limiter Gate")
+        return False
+
+    _rate_limits[vpa].append(now)
+    return True
 
 
 def _sigmoid(x: float) -> float:
@@ -79,15 +208,36 @@ def _make_record(
     amount = amount if amount is not None else random.uniform(100.0, 150_000.0)
     velocity = velocity if velocity is not None else random.randint(1, 4)
     ip = ip or f"192.168.{random.randint(0, 3)}.{random.randint(1, 254)}"
+
+    # Rate Limiting check
+    allowed = check_rate_limit(vpa)
+    
+    if not allowed:
+        # Return blocked entry
+        return TxRecord(
+            timestamp=datetime.now().strftime("%H:%M:%S.%f")[:-3],
+            rail=rail,
+            network="BLOCKED",
+            amount=amount,
+            risk=0.9999,
+            escrow="RATE_LIMITED",
+            vpa=vpa,
+            ip=ip,
+            velocity=velocity,
+            shap={"ip_anomaly": 0.3, "auth_discrepancy": 0.5, "velocity_impact": 0.4, "pq_agility": 0.35},
+        )
+
     cross = rail in ("Visa", "Mastercard", "PayPal") and random.random() > 0.6
     network = random.choice(CROSS_NETS) if cross else random.choice(DOMESTIC_NETS)
     score, shap = _compute(amount, velocity, auth_failed)
+    
     if score >= RISK_CRITICAL:
         escrow = "ISOLATED"
     elif score >= RISK_ELEVATED:
         escrow = "PENDING"
     else:
         escrow = "CLEAR"
+        
     return TxRecord(
         timestamp=datetime.now().strftime("%H:%M:%S.%f")[:-3],
         rail=rail,
@@ -110,7 +260,7 @@ def _sim_loop() -> None:
             _store.append(rec)
             if len(_store) > 500:
                 _store.pop(0)
-        time.sleep(random.uniform(0.2, 0.6))
+        time.sleep(random.uniform(0.3, 0.7))
 
 
 def start_simulator() -> None:
@@ -165,13 +315,16 @@ def inject_credential_stuffing() -> None:
                          auth_failed=False, ip=ip)
     with _lock:
         _store.append(final)
+    create_cert_incident(target, "Visa", 950_000.0, "HIGH", "Credential Stuffing Pattern")
 
 
 def inject_asset_liquidation() -> None:
-    rec = _make_record(vpa="gsec_vault@corp", rail="RTGS", amount=5_000_000.0,
+    target = "gsec_vault@corp"
+    rec = _make_record(vpa=target, rail="RTGS", amount=5_000_000.0,
                        velocity=1, auth_failed=False, ip="203.0.113.88")
     with _lock:
         _store.append(rec)
+    create_cert_incident(target, "RTGS", 5_000_000.0, "CRITICAL", "Unauthorized Corporate Liquidation")
 
 
 def inject_velocity_flood() -> None:
@@ -182,4 +335,4 @@ def inject_velocity_flood() -> None:
                            velocity=i + 1, auth_failed=False, ip=ip)
         with _lock:
             _store.append(rec)
-        time.sleep(0.016)
+        time.sleep(0.01)
