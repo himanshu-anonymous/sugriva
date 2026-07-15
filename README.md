@@ -227,3 +227,48 @@ The advanced Textual dashboard (`tui_template/run_demo.py`) features the followi
 | `set threshold <float>` | Updates GNN risk score containment threshold (ADMIN). | `set threshold 0.80` |
 | `Ctrl+1` / `Ctrl+2` / `Ctrl+3` | Shortcut keys to inject stuffing (`1`), G-Sec liquidation (`2`), or transaction floods (`3`) (ADMIN). | (Press keys) |
 | `Ctrl+4` | Shortcut key to inject **Quantum Attack** (coherence collapse & entropy drain) (ADMIN). | (Press keys) |
+
+---
+
+## 10. Web-Based Sugriva Control Center (`sugriva-web/`)
+
+Sugriva incorporates a high-fidelity, flat-design Web UI mapping all TUI features into a premium browser-based interface.
+
+### Technical Web Stack
+* **Framework:** React + Vite + TypeScript
+* **Animations:** Framer Motion (for fluid tab-swapping and spinning QKD quantum indicators)
+* **Styling:** Vanilla CSS (no Tailwind, no gradients; absolute flat high-contrast design)
+* **Branding Font:** Orbitron (Google Fonts)
+
+### High-Contrast Visual Design
+* **Primary Contrast:** White backdrop (`#ffffff`/`#fcfcfc`) bounded by clean gray dividers, utilizing Safety Orange (`#ff6600`) for active tabs, input borders, and badge outlines.
+* **Positive Feedback Tints:** Verified clear transactions and manual overrides render in a deep green font (`#009933`) over a light green tint background panel (`#e6ffe6`).
+* **Active Mule Indicators:** Suspected mule accounts isolated by GNN node correlation render in magenta (`#cc00cc`) over soft background tint (`#ffe6ff`).
+
+### Core Interactive Workspaces
+1. **Telemetry Log:** Real-time filtered payments grid.
+2. **Security Mesh:** Animated SVG connections detailing `Account VPA -> [BRIDGE] -> IP`.
+3. **Auth steps:** RBI-compliant compliance gateways (Inline vs SMS OTP vs DigiLocker KYC).
+4. **Database Search:** Fuzzy accounts registry with one-click administrative unfreeze override triggers.
+5. **Crypto logs:** Stateless SHA-256 tokens, HMAC integrity validations, and AES-256 ciphers.
+6. **Quantum guard:** Active coherence metrics, hardware TRNG entropy bits, and ML-KEM/ML-DSA speed.
+7. **Audits & Incidents:** Verifiable SHA-256 chained audit logs and CERT-In 6-Hour SLA countdown timers.
+
+### Web Console Commands
+Type commands directly in the navbar terminal input line:
+* `login admin adminpassword` — Elevates active role to ADMIN.
+* `login analyst` — Downgrades active role to ANALYST.
+* `logout` — Resets administrative credentials back to read-only tier.
+* `unfreeze <vpa>` — Override quarantine locks on frozen account nodes (ADMIN).
+* `breaker [trip/reset]` — Toggle security circuit breaker fail-closed gates (ADMIN).
+* `set threshold <float>` — Alter GNN isolation limit on the fly (ADMIN).
+
+### Running the Web Application
+Navigate to the web project subdirectory, install dependencies, and launch Vite dev:
+```bash
+cd sugriva-web
+npm install
+npm run dev
+```
+Open **[http://localhost:3000/](http://localhost:3000/)** in your browser.
+Trigger attack injections using the footer click panels or press keyboard shortcuts (`Ctrl+1` through `Ctrl+4`).
