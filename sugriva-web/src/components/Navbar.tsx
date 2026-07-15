@@ -210,10 +210,10 @@ export const Navbar: React.FC = () => {
           color: var(--accent-primary);
         }
         .logo-text {
-          font-family: 'Impact', 'Montserrat', 'Arial Black', sans-serif;
+          font-family: 'Orbitron', sans-serif;
           font-weight: 900;
-          letter-spacing: 4px;
-          font-size: 24px;
+          letter-spacing: 3px;
+          font-size: 20px;
           color: var(--accent-primary);
         }
         .pipeline-status {
