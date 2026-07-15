@@ -13,6 +13,8 @@ export const DatabaseTab: React.FC = () => {
   const baseAccounts = [
     { vpa: "demat_vault@treasury", ip: "198.51.100.99", risk: 0.05, escrow: "CLEAR", amount: 12000000.0 },
     { vpa: "gsec_vault@corp", ip: "203.0.113.88", risk: 0.12, escrow: "CLEAR", amount: 6400000.0 },
+    { vpa: "mule_transit_99@escrow", ip: "198.51.100.44", risk: 0.99, escrow: "MULE_SUSPENDED", amount: 450000.0 },
+    { vpa: "mule_collection_77@pay", ip: "203.0.113.12", risk: 0.98, escrow: "MULE_SUSPENDED", amount: 820000.0 },
     { vpa: "user_7712@bank", ip: "192.168.0.42", risk: 0.01, escrow: "CLEAR", amount: 450.0 },
     { vpa: "user_1120@bank", ip: "192.168.1.109", risk: 0.55, escrow: "PENDING", amount: 15400.0 },
     { vpa: "user_9045@bank", ip: "192.168.3.11", risk: 0.02, escrow: "CLEAR", amount: 120.0 }
@@ -80,7 +82,7 @@ export const DatabaseTab: React.FC = () => {
               </tr>
             ) : (
               filtered.map((acc, i) => {
-                const isQuarantined = ["ISOLATED", "AUTO_FROZEN"].includes(acc.escrow);
+                const isQuarantined = ["ISOLATED", "AUTO_FROZEN", "MULE_SUSPENDED"].includes(acc.escrow);
                 return (
                   <tr key={acc.vpa + i} className={isQuarantined ? "frozen-row" : ""}>
                     <td className="vpa-col">{acc.vpa}</td>
@@ -90,7 +92,9 @@ export const DatabaseTab: React.FC = () => {
                       {acc.risk.toFixed(4)}
                     </td>
                     <td>
-                      {isQuarantined ? (
+                      {acc.escrow === "MULE_SUSPENDED" ? (
+                        <span className="error-badge flex-badge" style={{ backgroundColor: "#ffe6ff", color: "#cc00cc", border: "1px solid #cc00cc" }}><ShieldAlert size={10} /> MULE SUSPENDED</span>
+                      ) : isQuarantined ? (
                         <span className="error-badge flex-badge"><ShieldAlert size={10} /> QUARANTINED</span>
                       ) : acc.escrow === "PENDING" ? (
                         <span className="warning-badge flex-badge"><KeyRound size={10} /> HELD (2FA)</span>

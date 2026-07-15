@@ -1,6 +1,6 @@
 import React from "react";
 import { useStore } from "../state/StoreContext";
-import { Sparkles, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 
 export const RightRiskPanel: React.FC = () => {
   const { records, threshold } = useStore();
@@ -52,7 +52,6 @@ export const RightRiskPanel: React.FC = () => {
   return (
     <aside className="risk-panel-container">
       <div className="panel-header">
-        <Sparkles size={14} className="header-icon" />
         <span>DYNAMIC RISK RATIO</span>
       </div>
 

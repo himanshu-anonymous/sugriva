@@ -26,6 +26,8 @@ export const TelemetryTab: React.FC<TelemetryTabProps> = ({ activeRail }) => {
         return <span className="error-badge">RATE LIMITED</span>;
       case "AUTO_FROZEN":
         return <span className="error-badge flex-badge"><ShieldAlert size={10} /> AUTO FROZEN</span>;
+      case "MULE_SUSPENDED":
+        return <span className="error-badge flex-badge" style={{ backgroundColor: "#ffe6ff", color: "#cc00cc", border: "1px solid #cc00cc" }}><ShieldAlert size={10} /> MULE SUSPENDED</span>;
       default:
         return <span className="flat-badge">{escrow}</span>;
     }

@@ -6,7 +6,7 @@ export interface TxRecord {
   network: string;
   amount: number;
   risk: number;
-  escrow: "CLEAR" | "PENDING" | "ISOLATED" | "RATE_LIMITED" | "AUTO_FROZEN";
+  escrow: "CLEAR" | "PENDING" | "ISOLATED" | "RATE_LIMITED" | "AUTO_FROZEN" | "MULE_SUSPENDED";
   vpa: string;
   ip: string;
   velocity: number;
@@ -169,7 +169,12 @@ export function useSugrivaEngine() {
     customFailedAuth: boolean = false
   ) => {
     const now = Date.now();
-    const vpa = customVpa || `user_${Math.floor(1000 + Math.random() * 9000)}@bank`;
+    const isMuleRandomTick = Math.random() > 0.94;
+    const defaultVpa = isMuleRandomTick 
+      ? `mule_transit_${Math.floor(10 + Math.random() * 89)}@escrow`
+      : `user_${Math.floor(1000 + Math.random() * 9000)}@bank`;
+      
+    const vpa = customVpa || defaultVpa;
     const rail = customRail || RAILS[Math.floor(Math.random() * RAILS.length)];
     const amount = customAmount !== undefined ? customAmount : parseFloat((Math.random() * 120000).toFixed(2));
     const ip = customIp || `192.168.${Math.floor(Math.random() * 4)}.${Math.floor(1 + Math.random() * 254)}`;
@@ -254,7 +259,12 @@ export function useSugrivaEngine() {
     const score = parseFloat(sigmoid(rawSum).toFixed(6));
 
     let escrow: TxRecord["escrow"] = "CLEAR";
-    if (score >= threshold) {
+    if (vpa.includes("mule")) {
+      escrow = "MULE_SUSPENDED";
+      quarantinedVpas.current.set(vpa, now + 300000); // Freeze mule
+      await writeAudit(`GNN Topology Alert: Multi-sender aggregation patterns correlated to Mule Node ${vpa}. Suspended.`, "CRITICAL");
+      await logIncident(vpa, rail, amount, "CRITICAL", "Mule Node Correlation");
+    } else if (score >= threshold) {
       escrow = "ISOLATED";
       // AUTO-FREEZE VPA for 5 Minutes (300,000ms)
       quarantinedVpas.current.set(vpa, now + 300000);

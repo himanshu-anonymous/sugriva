@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useStore } from "../state/StoreContext";
 import { checkAdminPassword } from "../state/mockEngine";
 import { motion, AnimatePresence } from "framer-motion";
-import { Terminal, Shield, Cpu, Lock, Unlock } from "lucide-react";
+import { Terminal, Cpu, Lock, Unlock } from "lucide-react";
 
 export const Navbar: React.FC = () => {
   const { role, setRole, writeAudit, triggerUnfreeze, setThreshold, circuitBreaker, setCircuitBreaker } = useStore();
@@ -100,6 +100,10 @@ export const Navbar: React.FC = () => {
           setConsoleLogs(prev => [`Threshold adjusted to ${val} successfully.`, ...prev]);
         }
       }
+    } else if (action === "logout") {
+      setRole("ANALYST");
+      await writeAudit("User logged out from administrative tier", "SUCCESS");
+      setConsoleLogs(prev => ["Logged out successfully.", ...prev]);
     } else {
       setConsoleLogs(prev => [`Unknown command: '${cmd}'. Type 'help' for syntax guide.`, ...prev]);
     }
@@ -109,7 +113,6 @@ export const Navbar: React.FC = () => {
     <header className="navbar-container">
       <div className="navbar-brand">
         <div className="brand-logo">
-          <Shield size={22} className="logo-icon" />
           <span className="logo-text">SUGRIVA</span>
         </div>
         
@@ -207,10 +210,11 @@ export const Navbar: React.FC = () => {
           color: var(--accent-primary);
         }
         .logo-text {
+          font-family: 'Impact', 'Montserrat', 'Arial Black', sans-serif;
           font-weight: 900;
-          letter-spacing: 2px;
-          font-size: 18px;
-          color: var(--color-text);
+          letter-spacing: 4px;
+          font-size: 24px;
+          color: var(--accent-primary);
         }
         .pipeline-status {
           display: flex;
