@@ -48,7 +48,6 @@ class SugivaRiskPanel(Vertical):
     SugivaRiskPanel .graph-row {
         height: 1;
         color: $text;
-        font-family: monospace;
     }
     """
 
