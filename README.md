@@ -92,6 +92,18 @@ An interactive, multi-pane terminal dashboard to monitor system security operati
 *   **Diagnostics & SHAP XAI (Middle-Right):** Displays SHAP attribution weights during inspection, or live database and network infrastructure diagnostic statuses when idle.
 *   **Analyst Command Console (Bottom):** Allows running commands to interact with the system on the fly.
 
+### 10. Sugriva Textual TUI Template (Posting Integration)
+Located at `C:\Users\Priyanshu Patil\Documents\antigravity\happy-carson\tui_template`, this is a fully customized standalone Textual application that replicates Posting's layout constraints (thin border lines, Dark Carbon `#050505` backdrop, Safety Orange accents) while integrating all Sugriva live operational surfaces:
+*   **Payment Rail Browser (Sidebar):** A hierarchical collapsible navigation tree showing NEFT/RTGS/UPI and Visa/Mastercard/PayPal rails. Selecting a rail node isolates matching telemetry streams.
+*   **Live Context Bar:** Top bar displaying an active `[CONTEXT]: PIPELINE_ACTIVE` indicator and console query command input.
+*   **Telemetry Log Tab:** Realtime scrolling `DataTable` mapping transactions, amounts, clearance networks, risk scores, and escrow status. Highlights inverse colors when threat thresholds are crossed.
+*   **Security Mesh Tab:** Dynamic visual display rendering structural ASCII transaction relationship traces: `(Sender VPA) -> [BRIDGE-xxxx] -> (IP)`.
+*   **Authentication Grid Tab:** Tracks dynamic step-up authentication routing states (`INLINE_PASS`, `SMS_OTP_PENDING`, `DIGILOCKER_KYC_REQUIRED`).
+*   **Database Search Tab:** Fully queryable database containing simulated accounts, allowing direct in-grid searching and real-time salting / SHA-256 HMAC hash generation.
+*   **Crypto Engine Tab:** Live-scrolling logs simulating dynamically salted HMAC hashes, vault rotations, and AES-256-GCM ciphertexts.
+*   **Quantum Guard Tab:** Live monitors detailing NIST-compliant Kyber key encapsulations, Dilithium signature validation speed, and QKD entanglement channels.
+*   **Safety Orange Risk Meter & SHAP XAI Metrics (Sidebar):** Renders dynamic threat metrics (4 decimal places), live horizontal progress bars mapping SHAP feature attributions, and a Sandbox Runtime console tracking memory delta (`tracemalloc`), latencies, connection states, and ledger records.
+
 ---
 
 ## Configuration Specifications
@@ -161,6 +173,13 @@ python tools/simulate_streams.py
 Open a new terminal window, activate the virtual environment, and launch the interactive dashboard:
 ```bash
 python tools/sugriva_terminal_ui.py
+```
+
+#### Step G: Run the Sugriva Textual TUI Template (Posting Integration)
+To run the advanced Textual template mimicking Posting's aesthetic grid layout:
+```bash
+cd C:\Users\Priyanshu Patil\Documents\antigravity\happy-carson\tui_template
+& "C:\Users\Priyanshu Patil\Documents\program01\sugriva\venv\Scripts\python.exe" run_demo.py
 ```
 
 ---

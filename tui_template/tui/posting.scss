@@ -1,0 +1,898 @@
+$empty-hatch: right $surface-lighten-1 70%;
+
+* {
+  scrollbar-color: $primary 10%;
+  scrollbar-color-hover: $primary 80%;
+  scrollbar-color-active: $primary;
+  scrollbar-background: $surface-darken-1;
+  scrollbar-background-hover: $surface-darken-1;
+  scrollbar-background-active: $surface-darken-1;
+  scrollbar-size-vertical: 1;
+
+  &:focus {
+    scrollbar-color: $primary 50%;
+  }
+}
+
+Posting {
+  &.-compact {
+    & AppHeader {
+      padding: 0 1;
+    }
+    & AppBody {
+      padding: 0;
+    }
+    & UrlBar {
+      padding: 0;
+    }
+
+    & Footer {
+      FooterKey {
+        margin-left: 1;
+      }
+      padding-left: 0;
+    }
+    & .section {
+      border: none;
+    }
+    & Tabs {
+      height: 1;
+      & Underline {
+        display: none;
+        height: 0;
+      }
+    }
+
+    & TabbedContent:focus-within Tabs {
+      &:focus {
+        & .-active {
+          text-style: $block-cursor-text-style;
+          color: $block-cursor-foreground;
+          background: $block-cursor-background;
+        }
+      }
+      &:blur Tab:enabled {
+        &.-active {
+          background: $panel  ;
+        }
+      }
+    }
+
+
+    & CollectionBrowser {
+      background: $surface 50%;
+      &:focus {
+        outline: vkey $accent;
+      }
+      & RequestPreview {
+        border-top: none;
+        background: $surface 100%;
+        padding: 0 1;
+      }
+    }
+
+    & RequestEditor {
+      background: $surface 25%;
+    }
+
+    & KeyValueInput {
+      & Input {
+        margin: 0;
+        border-left: vkey $surface-darken-1;
+        padding: 0;
+        &:focus {
+          padding: 0;
+          border-left: vkey $surface-darken-1;
+        }
+      }
+      & Button {
+        margin: 0;
+        border-left: vkey $surface-darken-1;
+        border-right: none;
+        &:hover {
+          border-left: vkey $surface-darken-1;
+          border-right: none;
+        }
+      }
+    }
+    
+    & ResponseArea {
+      background: $surface 10%;
+    }
+
+    & .textual-jump-label {
+      padding: 0;
+      offset-y: 0;
+    }
+
+    & CommandPalette {
+      align-horizontal: left;
+
+      & > Vertical {
+        /* The margin will be set in code, to align 
+        the command palette with the url bar 
+        */
+        margin-left: 11;
+        margin-top: 1;
+        max-width: 1fr;
+        width: auto;
+      }
+    
+      & #--input {
+        border: none;
+        border-left: wide $accent;
+    
+        & CommandInput {
+          height: 1;
+          border: none;
+          padding: 0;
+          width: 1fr;
+        }
+      }
+    
+      & CommandList {
+        width: auto;
+        border: none;
+        max-height: 67vh;
+        border-left: wide $accent;
+        padding: 0;
+        & > .option-list--option {
+          padding: 0;
+        }
+      }
+
+    }
+
+    &.-header-hidden {
+      & CommandPalette > Vertical{
+        margin-top: 0;
+        margin-left: 11;
+      }
+    }
+
+    & #theme-search-command-palette {
+      background: black 15%;
+      & > Vertical {
+        height: auto;
+        & CommandList {
+          width: 28;
+          height: auto;
+          max-height: 10;
+        }
+      }
+    }
+
+    & #request-search-palette {
+      & > Vertical {
+        width: 1fr;
+        overflow: hidden;
+        & CommandList {
+          width: 1fr;
+        }
+      }
+    }
+  }
+
+}
+
+ResponseArea {
+  border-subtitle-color: $text-muted;
+  & ResponseTextArea.empty {
+      display: none;
+  }
+  &.success .border-title-status {
+      color: $text-success;
+      background: $success-muted;
+  }
+  &.warning .border-title-status {
+      color: $text-warning;
+      background: $warning-muted;
+  }
+  &.error .border-title-status {
+      color: $text-error;
+      background: $error-muted;
+  }
+}
+
+AutoComplete {
+  border-left: wide $accent;
+  background: $surface;
+  
+  & AutoCompleteList {
+    color: $text-muted;
+    background: transparent;
+  }
+
+  & .autocomplete--highlight-match {
+    color: $text-accent;
+    background: $accent-muted;
+  }
+}
+
+Screen {
+  background: $background;
+}
+
+ModalScreen {
+  background: black 30%;
+}
+
+Footer {
+  padding-left: 2;
+}
+
+HelpPanel {
+  #title {
+    display: block;
+  }
+  KeyPanel {
+    scrollbar-size-vertical: 1;
+  }
+}
+.modal-body {
+  background: $background;
+  padding: 1 2;
+  width: 50%;
+  height: auto;
+  max-height: 70%;
+  border: wide $background-lighten-2;
+  border-title-color: $text;
+  border-title-background: $background;
+  border-title-style: bold;
+}
+
+.section {
+  border: round $accent 40%;
+  border-title-color: $text-accent 50%;
+  border-title-align: right;
+
+  &:focus-within {
+    border: round $accent 100%;
+    border-title-color: $foreground;
+    border-title-style: b;
+  }
+
+}
+
+.hidden {
+  display: none;
+}
+
+.w-auto {
+  width: auto;
+}
+
+.dock-right {
+  dock: right;
+}
+
+.dock-left {
+  dock: left;
+}
+
+AppHeader {
+  color: $text-primary;
+  padding: 1 3;
+  height: auto;
+  & > #app-user-host {
+      dock: right;
+      color: $text-muted;
+  }
+}
+
+AppBody {
+  padding: 0 2;
+
+  &.layout-horizontal {
+    layout: horizontal;
+
+    & KeyValueInput {
+      dock: top;
+      & #key-value-inputs {
+        layout: vertical;
+        height: 3;
+        & Button {
+          width: 100%;
+        }
+      }
+
+    }
+
+  }
+  
+  &.layout-vertical {
+    layout: vertical;
+    
+    & KeyValueInput #key-value-inputs {
+      layout: horizontal;
+    }
+  }
+}
+
+DataTable {
+  height: auto;
+  width: 1fr;
+  padding: 0 1;
+  &:focus {
+      width: 1fr;
+      padding: 0;
+      border-left: inner $accent;
+  }
+}
+
+PostingDataTable {
+    & > .datatable--header {
+      color: $text-success;
+      background: $surface;
+    }
+    & > .datatable--header-cursor {
+      color: $text;
+      background: $block-cursor-background;
+    }
+    &:blur {
+      & > .datatable--cursor {
+        background: transparent;
+      }
+      & > .datatable--header-cursor {
+        color: $text-success;
+        background: $surface;
+      }
+      
+    }
+}
+
+#response-headers-pane {
+  height: 1fr;
+  & ResponseHeadersTable {
+    max-height: 1fr;
+  }
+}
+
+#response-cookies-pane {
+  height: 1fr;
+  & CookiesSection {
+    max-height: 1fr;
+    PostingDataTable {
+      display: block;
+    }
+    #empty-message {
+      hatch: $empty-hatch;
+      color: $text-muted;
+      display: none;
+    }
+    &.empty {
+      PostingDataTable {
+        display: none;
+      }
+      #empty-message {
+        display: block;
+      }
+    }
+
+  }
+}
+
+Input {
+  border: none;
+  width: 1fr;
+  &:focus {
+      border: none;
+      padding: 0 1;
+  }
+  &.error {
+      border-left: thick $error;
+  }
+}
+
+PostingRichLog {
+  background: $surface 75%;
+  padding-left: 1;
+  &:focus {
+    border-left: wide $accent;
+    padding-left: 0;
+  }
+}
+
+
+UrlBar {
+  height: auto;
+  padding: 0 3 0 3;
+
+  & #main-row {
+    height: 1;
+  }
+
+  & #method-selector {
+      width: 11;
+      height: 1;
+      &:blur SelectCurrent {
+        background: $primary-muted;
+        #label {
+          color: $text-primary;
+        }
+      }
+  }
+
+  & #response-status-code {
+    width: 5;
+    height: 1;
+    padding: 0 1;
+    display: none;
+    &.-success {
+      color: $text-success;
+      background: $success-muted;
+    }
+    &.-warning {
+      color: $text-warning;
+      background: $warning-muted;
+    }
+    &.-error {
+      color: $text-error;
+      background: $error-muted;
+    }
+  }
+
+  & #trace-markers {
+      padding: 0 1;
+      display: none;
+      background: $surface;
+
+      &.has-events {
+          display: block;
+          width: auto;
+      }
+  }
+  & #variable-value-bar {
+      width: 1fr;
+      color: $text-muted;
+      text-align: center;
+      height: 1;
+  }
+  & .complete-marker {
+      color: $success;
+      background: $surface;
+  }
+  & .failed-marker {
+      color: $error;
+      background: $surface;
+  }
+  & .started-marker {
+      color: $warning;
+      background: $surface;
+  }
+  & .not-started-marker {
+      color: $text-muted 30%;
+      background: $surface;
+  }
+}
+
+SendRequestButton {
+  min-width: 8;
+  background: $accent-muted;
+  color: $text-accent;
+  text-style: b;
+  &:hover {
+    background-tint: $text-accent 10%;
+  }
+}
+
+KeyValueEditor {
+  KeyValueInput {
+    dock: bottom;
+    height: auto;
+    width: 1fr;
+
+    #editing-row-label {
+      display: none;
+      padding: 0 1;
+      height: 1;
+      color: $text-accent;
+    }
+    #key-value-inputs {
+      height: 1;
+    }
+    #row-writer-footer {
+      height: auto;
+    }
+    &.edit-mode {
+        background: $accent-muted;
+        #editing-row-label {
+          display: block;
+        }
+        #add-button {
+            color: $text;
+            background: $accent;
+        }
+        Input {
+          color: $text;
+          background: $accent 10%;
+        }
+    }
+    & Input {
+        border: none;
+        width: 1fr;
+        margin: 0 1;
+        padding: 0 1;
+        &:focus {
+          border: none;
+          padding: 0 1;
+        }
+    }
+  
+    & Button {
+        background: $primary;
+        color: $text;
+        text-style: none;
+        min-width: 0;
+        width: auto;
+        margin: 0 1;
+        &:hover {
+            text-style: b;
+            border: none;
+            background: $primary-darken-1;
+        }
+    }
+  }
+
+  & PostingDataTable {
+      display: block;
+  }
+
+  & #empty-message {
+      display: none;
+  }
+
+  &.empty {
+      & PostingDataTable {
+          display: none;
+      }
+      & #empty-message {
+          color: $text-muted;
+          hatch: right $surface-lighten-1 70%;
+          display: block;
+      }
+  }
+}
+
+CollectionBrowser {
+  height: 1fr;
+  dock: left;
+  width: auto;
+  max-width: 33%;
+
+  & Tree {
+      color: $foreground 80%;
+      background: transparent;
+      width: 1fr;
+      &:focus {
+        color: $foreground;
+      }
+  }
+
+  #empty-collection-label {
+     color: $text-muted;
+     padding: 1 2;
+     width: 24;
+  }
+}
+
+TextArea {
+  border: none;
+  &:focus {
+      border: none;
+  }
+
+  &.empty {
+    & .text-area--cursor-line {
+      background: transparent;
+    }
+
+    & .text-area--cursor-gutter {
+      background: transparent;
+    }
+  }
+
+  &#description-textarea {
+    padding: 0;
+    padding-left: 1;
+    &:focus {
+      border-left: outer $surface-lighten-1;
+      padding: 0;
+    }
+  }
+}
+
+
+
+RequestMetadata {
+  padding: 0 2;
+  & Input {
+      margin-bottom: 1;
+  }
+  & PostingTextArea {
+      margin-bottom: 1;
+  }
+  & Button {
+      dock: bottom;
+      width: 1fr;
+  }
+  & #request-path {
+      color: $text-muted;
+      margin: 0;
+      padding: 0;
+      height: auto;
+      max-height: 2;
+  }
+}
+
+RequestEditor {
+  & #request-body-type-select-container {
+      dock: top;
+      height: 1;
+  }
+  & #no-body-label {
+      height: 1fr;
+      hatch: $empty-hatch;
+      color: $text-muted;
+  }
+}
+
+RequestBodyTextArea {
+  background: transparent;
+}
+
+ResponseTextArea {
+  background: transparent;
+}
+
+TextAreaFooter {
+  dock: bottom;
+  height: 1;
+  width: 1fr;
+
+  &:focus-within {
+      background: $primary-muted;
+  }
+
+  &:disabled {
+      background: transparent;
+  }
+
+  & Select {
+      width: 8;
+      margin-left: 1;
+      
+      & SelectCurrent {
+        width: 8;
+        background: $surface;
+      }
+      & SelectOverlay {
+        width: 16;
+
+      }
+  }
+
+  & Checkbox {
+      margin: 0 1;
+      height: 1;
+      padding: 0 1;
+      border: none;
+      & .toggle--button {
+        background: transparent;
+      }
+      &:focus {
+        background: $block-cursor-background;
+        & .toggle--button {
+          background: $block-cursor-background;
+        }
+      }
+  }
+
+  #location-label {
+      width: auto;
+      color: $text 50%;
+      margin-left: 1;
+  }
+
+  #mode-label {
+      dock: left;
+      padding: 0 1;
+      display: none;
+      margin-left: 1;
+      &.visual-mode {
+        color: $text-accent;
+        background: $accent-muted;
+        display: block;
+      }
+  }
+
+  #rw-label {
+      margin-left: 1;
+      color: $text-warning;
+      background: $warning-muted;
+      padding: 0 1;
+      display: none;
+      &:disabled {
+        opacity: 30%;
+      }
+      &.read-only {
+         display: block;
+      }
+  }
+}
+
+
+Input {
+  padding: 0 1;
+  height: 1;
+  border: none;
+  &.-invalid {
+    padding-left: 0;
+    border-left: outer $error;
+  }
+
+  &:focus {
+    padding-left: 0;
+    border-left: outer $surface-lighten-1;
+    &.-invalid {
+      border-left: outer $error;
+    }
+  }
+}
+
+Button {
+  padding: 0 1;
+  height: 1;
+  border: none;
+
+  &:disabled {
+    opacity: 40%;
+  }
+}
+
+CommandPalette {
+  background: black 33%;
+  
+  & > Vertical {
+    margin-top: 2;
+    width: 65vw;
+    max-height: 65vh;
+  }
+  
+  & #--input {
+    border: none;
+    border-left: wide $accent;
+    
+    & CommandInput {
+      height: 3;
+      border: none;
+      padding: 1 2;
+    }
+    
+    & SearchIcon {
+      display: none;
+    }
+    
+  }
+  
+  & CommandList {
+    border: none;
+    border-left: wide $accent;
+    padding-bottom: 1;
+  }
+
+}
+
+Select {
+  height: 1;
+  border: none;
+  padding: 0;
+  &:focus {
+    #label {
+      color: $block-cursor-foreground;
+    }
+    SelectCurrent {
+      background: $block-cursor-background;
+      .arrow {
+        color: $block-cursor-foreground;
+      }
+    }
+  }
+  
+  SelectCurrent {
+    height: 1;
+    border: none;
+    padding: 0 1;
+    background: $surface;
+
+    .arrow {
+      color: $text-disabled;
+    }
+  }
+
+  & > SelectOverlay {
+    padding: 0;
+    border: none;
+  }
+
+}
+
+.textual-jump-label {
+  dock: top;
+  color: $text-accent;
+  background: $accent-muted;
+  text-style: bold;
+  padding: 0 1;
+  margin-right: 1;
+  offset-y: -1;
+  height: 1;
+  width: auto;
+}
+
+#textual-jump-info {
+  margin-bottom: 1;
+  dock: bottom;
+  height: 1;
+  width: 1fr;
+  background: $accent-muted;
+  color: $text-accent;
+  hatch: right $accent 30%;
+  
+  & Label {
+    width: auto;
+    padding: 0 1;
+  }
+}
+
+#textual-jump-dismiss {
+  dock: bottom;
+  height: 1;
+  background: transparent;
+  color: $foreground-muted;
+}
+
+CollectionBrowser {
+  &.section {
+    border-subtitle-align: left;
+  }
+
+  & RequestPreview {
+    color: $text-muted;
+    dock: bottom;
+    height: auto;
+    max-height: 50%;
+    width: 100%;
+    padding: 0 1;
+    border-top: solid $accent 40%;
+    &.hidden {
+        display: none;
+    }
+  }
+}
+
+ScriptOutput {
+  padding: 0 2;
+  & #status-bar {
+      height: 3;
+      text-style: bold;
+  }
+  & Label {
+      width: auto;
+      &.-success {
+          color: $text-success;
+          text-style: not b;
+        }
+        &.-error {
+          color: $text-error;
+          text-style: not b;
+        }
+        &.-no-script {
+          color: $text-muted;
+          text-style: not b;
+      }
+  }
+
+  & #script-output-title {
+    text-style: b;
+  }
+}
