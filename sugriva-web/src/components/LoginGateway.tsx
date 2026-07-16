@@ -244,10 +244,10 @@ export const LoginGateway: React.FC = () => {
         }
 
         .login-logo {
-          font-family: 'Orbitron', sans-serif;
-          font-size: 28px;
-          font-weight: 900;
-          letter-spacing: 4px;
+          font-family: 'Quattrocento', serif;
+          font-size: 30px;
+          font-weight: 700;
+          letter-spacing: 6px;
           color: var(--accent-primary, #ff6600);
           margin-bottom: 6px;
         }

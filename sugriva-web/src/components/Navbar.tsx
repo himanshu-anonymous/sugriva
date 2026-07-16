@@ -211,10 +211,10 @@ export const Navbar: React.FC = () => {
           color: var(--accent-primary);
         }
         .logo-text {
-          font-family: 'Orbitron', sans-serif;
-          font-weight: 900;
-          letter-spacing: 3px;
-          font-size: 20px;
+          font-family: 'Quattrocento', serif;
+          font-weight: 700;
+          letter-spacing: 5px;
+          font-size: 22px;
           color: var(--accent-primary);
         }
         .pipeline-status {
