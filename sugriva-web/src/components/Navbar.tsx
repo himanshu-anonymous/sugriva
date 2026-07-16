@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Terminal, Cpu, Lock, Unlock } from "lucide-react";
 
 export const Navbar: React.FC = () => {
-  const { role, setRole, writeAudit, triggerUnfreeze, setThreshold, circuitBreaker, setCircuitBreaker } = useStore();
+  const { role, setRole, writeAudit, triggerUnfreeze, setThreshold, circuitBreaker, setCircuitBreaker, setIsAuthenticated } = useStore();
   const [command, setCommand] = useState("");
   const [consoleLogs, setConsoleLogs] = useState<string[]>(["System initialized. Type 'help' to begin."]);
   const [showConsoleTip, setShowConsoleTip] = useState(false);
@@ -102,6 +102,7 @@ export const Navbar: React.FC = () => {
       }
     } else if (action === "logout") {
       setRole("ANALYST");
+      setIsAuthenticated(false);
       await writeAudit("User logged out from administrative tier", "SUCCESS");
       setConsoleLogs(prev => ["Logged out successfully.", ...prev]);
     } else {

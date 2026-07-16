@@ -1,14 +1,20 @@
 import { useState } from "react";
-import { StoreProvider } from "./state/StoreContext";
+import { StoreProvider, useStore } from "./state/StoreContext";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { PaymentRailBrowser } from "./components/PaymentRailBrowser";
 import { TabWorkspace } from "./components/TabWorkspace";
 import { RightRiskPanel } from "./components/RightRiskPanel";
+import { LoginGateway } from "./components/LoginGateway";
 import "./styles/index.css";
 
 function DashboardContent() {
+  const { isAuthenticated } = useStore();
   const [activeRail, setActiveRail] = useState<string | null>(null);
+
+  if (!isAuthenticated) {
+    return <LoginGateway />;
+  }
 
   return (
     <div id="root">

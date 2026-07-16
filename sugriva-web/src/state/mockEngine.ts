@@ -59,6 +59,7 @@ export async function sha256(message: string): Promise<string> {
 }
 
 export function useSugrivaEngine() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [records, setRecords] = useState<TxRecord[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [incidents, setIncidents] = useState<CertInIncident[]>([]);
@@ -348,6 +349,8 @@ export function useSugrivaEngine() {
   }, [qkdCoherence, trngEntropy, pqcFailures, threshold, circuitBreaker]);
 
   return {
+    isAuthenticated,
+    setIsAuthenticated,
     records,
     auditLogs,
     incidents,
