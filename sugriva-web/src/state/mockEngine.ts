@@ -60,6 +60,17 @@ export async function sha256(message: string): Promise<string> {
 
 export function useSugrivaEngine() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [adminAccounts, setAdminAccounts] = useState<Record<string, { password: string; signature: string }>>({
+    "admin": { password: "adminpassword", signature: "SUGRIVA-PQC-SECURE-SDK-v2.0" }
+  });
+  
+  const registerAdminAccount = (vpa: string, pass: string, sig: string) => {
+    setAdminAccounts(prev => ({
+      ...prev,
+      [vpa]: { password: pass, signature: sig }
+    }));
+  };
+
   const [records, setRecords] = useState<TxRecord[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [incidents, setIncidents] = useState<CertInIncident[]>([]);
@@ -351,6 +362,8 @@ export function useSugrivaEngine() {
   return {
     isAuthenticated,
     setIsAuthenticated,
+    adminAccounts,
+    registerAdminAccount,
     records,
     auditLogs,
     incidents,
