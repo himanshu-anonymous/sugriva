@@ -31,6 +31,30 @@ flowchart TD
 
 ---
 
+### 1.1. 3-Phase Multi-Factor Access Gateway
+
+Sugriva enforces a strict multi-tier verification process for administrative terminal access:
+
+```mermaid
+flowchart TD
+    Start[User Login Request] --> A[Phase 1: Credentials Check]
+    A -->|Check adminAccounts ID & password| B{Valid Credentials?}
+    B -->|No| B_Fail[Audit Denial Log & Lock Access]
+    B -->|Yes| C[Phase 2: Dynamic OTP Generation]
+    
+    C -->|Deliver SMS MFA Code| D[User Enters OTP]
+    D -->|Match generated code| E{Correct OTP?}
+    E -->|No| E_Fail[Audit Denial Log & Lock Access]
+    E -->|Yes| F[Phase 3: SDK Integration Package/Key Upload]
+    
+    F -->|Drag & Drop sugriva_sdk.json| G[Read & Parse Signature Claims]
+    G -->|Verify SDK identifier & registered signature| H{Valid SDK Key?}
+    H -->|No| H_Fail[Audit Denial Log & Lock Access]
+    H -->|Yes| Success[Authorize Admin Access & Open Dashboard]
+```
+
+---
+
 ## 2. Hybrid Post-Quantum Cryptographic Gateway
 
 Sugriva implements a forward-proof **Hybrid Key Encapsulation Mechanism (KEM) Gateway** to thward Harvest-Now-Decrypt-Later (HNDL) sweeps while retaining legacy performance compliance.
@@ -46,6 +70,31 @@ flowchart LR
     D --> E
     E --> F[SHA-256 HMAC Verification]
     F --> G[(Durable SQLite Storage)]
+```
+
+---
+
+### 2.1. SQLite Cryptographic Database Shielding
+
+Sugriva implements field-level AES-CBC database encryption for sensitive transaction data fields (VPAs, IP addresses, transaction amounts) stored on disk, and decodes them dynamically during read queries:
+
+```mermaid
+flowchart TD
+    subgraph Data Write Path - Encryption
+        A[Incoming Transaction Record] --> B{Sensitive Field?}
+        B -->|vpa / ip / amount| C[Derive Key: PBKDF2 Master Hash]
+        C --> D[AES-CBC Encryption Wrapper]
+        D -->|Base64 Encoded Ciphertext| E[(SQLite DB File on Disk)]
+        B -->|rail / network / risk / escrow| E
+    end
+    
+    subgraph Data Read Path - Decryption
+        E --> F[Establish Connection: get_db_connection]
+        F --> G[Register Hook: create_function decrypt]
+        G --> H[SQL Query: SELECT decrypt vpa FROM tx_ledger]
+        H --> I[Dynamic Decryption Node]
+        I --> J[TUI / Web Console Dashboard Rendering]
+    end
 ```
 
 ---
