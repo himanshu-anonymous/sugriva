@@ -339,3 +339,65 @@ npm run dev
 ```
 Open **[http://localhost:3000/](http://localhost:3000/)** in your browser.
 Trigger attack injections using the footer click panels or press keyboard shortcuts (`Ctrl+1` through `Ctrl+4`).
+
+---
+
+## 11. System Walkthrough Gallery (Screenshots & Recordings)
+
+### 🎥 Operational Walkthrough & Demonstration Video
+*Demonstrates dynamic transaction flows, GNN classifications, control panel overrides, and the multi-factor gateway:*
+
+https://github.com/himanshu-anonymous/sugriva/assets/media/demo_video
+[View Operational Simulation MP4 Video](./media%20readme/Screen%20Recording%202026-07-16%20225630.mp4)
+
+---
+
+### 🛡️ 3-Phase Multi-Factor Access Gateway
+
+#### Phase 1: VPA Credentials Authentication
+*Admin verifies identity using registered credential sets via PBKDF2 hash validation.*
+![Credentials Authentication Gate](./media%20readme/Screenshot%202026-07-16%20224837.png)
+
+#### Phase 2: MFA OTP Challenge Verification
+*Generates and matches 6-digit dynamic OTP verification tokens.*
+![MFA OTP Verification Gate](./media%20readme/Screenshot%202026-07-16%20224912.png)
+
+#### Phase 3: local SDK License Package Verification
+*Validates compliance headers and hardware signature metrics in the uploaded JSON license.*
+![SDK License Key File Upload](./media%20readme/Screenshot%202026-07-16%20224920.png)
+
+#### Access Authorized & Gateway Handshake Complete
+*Grants dashboard access once signatures are validated successfully.*
+![SDK Signature Verification Success](./media%20readme/Screenshot%202026-07-16%20224929.png)
+
+---
+
+### 🖥️ Web-Based Sugriva Control Center
+
+#### Telemetry Logs & Risk Classification Stream
+*Streams payments, displaying white rows for normal nodes, yellow for warnings, and red for isolated risk nodes.*
+![Web Telemetry Log Workspace](./media%20readme/Screenshot%202026-07-16%20224948.png)
+
+#### Real-Time Security Mesh Graph
+*Maps transaction topologies, displaying live connections between VPA, transaction event, and IP nodes.*
+![Web Security Mesh Topology Graph](./media%20readme/Screenshot%202026-07-16%20225123.png)
+
+#### Active Threat Mitigation Control Panel
+*Gives administrators interactive controls over the threat simulation and system thresholds.*
+![Web Active Control Panel Workspace](./media%20readme/Screenshot%202026-07-16%20225134.png)
+
+#### Developer Tools Inspect Mode Intercepted
+*Global capture-phase blockers intercept browser DevTools requests to secure client-side views.*
+![Developer Tools Block Warning Log](./media%20readme/Screenshot%202026-07-16%20225240.png)
+
+---
+
+### 📟 curses-Based Terminal UI Dashboard
+
+#### Standalone Curses Dashboard Workspace
+*Renders log status tables and system threat metrics directly inside server terminals.*
+![TUI Console Interface Workspace](./media%20readme/Screenshot%202026-07-16%20225702.png)
+
+#### Cryptographically Chained Audit Ledger
+*Pends and logs chronological system actions linked by dynamic SHA-256 integrity hash chains.*
+![TUI Immutable Audit Pointer Ledger](./media%20readme/Screenshot%202026-07-16%20225722.png)
