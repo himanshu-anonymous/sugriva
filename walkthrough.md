@@ -54,3 +54,40 @@ A local verification signature configuration file `sugriva_sdk.json` has been pl
 }
 ```
 If successfully parsed, the gateway displays a confirmation checkmark and unlocks the full administrative control panel.
+
+---
+
+## 4. How to Test & Verify Security Features
+
+### A. Testing the 3-Phase Multi-Factor Gateway
+1. Navigate to **`http://localhost:3000/`**.
+2. **Sign Up Test:** Click **"Sign Up"** at the bottom of the card. Register a custom ID (VPA) and hardware ID. Type a password and note the dynamic color-coded strength ratings (Weak -> Quantum Resistant). Click **"Compile Trust Profile"** to automatically download the profile signature JSON file.
+3. **Phase 1 Test:** Toggle back to **"Log In"**, enter your registered ID and Password, and click **"Authenticate Credentials"**.
+4. **Phase 2 Test:** Click the **"Autofill code"** shortcut link in the blue OTP challenge box, then click **"Verify OTP Code"**.
+5. **Phase 3 Test:** Drag and drop the downloaded JSON license file (or select it via file explorer) into the upload area. The system will verify the signature matching parameters and unlock the dashboard.
+
+### B. Testing the Developer Tools Inspect Blocker
+1. Once on the Web UI, right-click anywhere on the screen. The context menu is intercepted and blocked.
+2. Press **`F12`**, **`Ctrl+Shift+I`** (Inspect Elements), or **`Ctrl+Shift+J`** (Console panel). Key events are captured and cancelled at the root, blocking DevTools launch attempts.
+3. Press **`Ctrl+U`** (View Page Source) or **`Ctrl+S`** (Save page payloads). The commands are blocked, preventing source code exposure.
+
+### C. Verifying SQLite AES Field-Level Encryption
+To verify that sensitive VPA, IP, and transaction amount fields are fully encrypted on disk:
+1. Open a terminal and use Python to run a direct raw query on the SQLite database:
+   ```bash
+   python -c "import sqlite3; conn = sqlite3.connect('data/sugriva_ledger.db'); cursor = conn.cursor(); cursor.execute('SELECT amount, vpa, ip FROM tx_ledger LIMIT 5'); print(cursor.fetchall())"
+   ```
+2. **Result Check:** The printed rows will display values wrapped in `IV:Ciphertext` Base64 strings, proving that PII data is fully encrypted at rest on your disk.
+3. Now run the query using Sugriva's secure driver helper, which registers the custom SQL decryption hook:
+   ```bash
+   python -c "import sys; sys.path.insert(0, 'tui_template'); import tui.widgets.sugriva.engine as e; conn = e.get_db_connection(); cursor = conn.cursor(); cursor.execute('SELECT decrypt(amount), decrypt(vpa), decrypt(ip) FROM tx_ledger LIMIT 5'); print(cursor.fetchall())"
+   ```
+4. **Result Check:** The fields will be printed in plaintext, verifying that dynamic SQL-level decryption is operating successfully on reads.
+
+### D. Testing Risk Color Grading
+1. Open the **Telemetry Log** tab in the main web dashboard.
+2. Monitor incoming mock transactions:
+   * Transactions with standard low-risk indicators (`risk < 0.50`) are rendered in clean **white**.
+   * Transactions with warnings (`risk 0.50 - 0.75`) are highlighted with a **yellow** background tint.
+   * Transaction anomalies with critical risk ratings (`risk >= 0.75`) are highlighted with a **red** background tint.
+3. Click the attack simulation panels in the footer to inject critical threats (e.g. credential stuffing or demat liquidations) and watch the alerts color dynamically in real time.
