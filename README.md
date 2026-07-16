@@ -2,6 +2,8 @@
 
 Project Sugriva is a high-throughput cyber-financial threat detection, telemetry ingestion, and mitigation platform. It combines asynchronous streaming ingestion, advanced cryptographic filtering, graph-based topological correlation, and post-quantum safe layers to isolate risk in real time.
 
+For an exhaustive guide detailing every function, data flow mapping, and complete technology specs, refer to the **[Enterprise Reference & Technical Specifications Manual](file:///c:/Users/Priyanshu%20Patil/Documents/program01/sugriva/SYSTEM_REFERENCE.md)**.
+
 ---
 
 ## 1. System Architecture & Telemetry Pipeline
