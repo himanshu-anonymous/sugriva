@@ -4,6 +4,10 @@ Project Sugriva is a high-throughput cyber-financial threat detection, telemetry
 
 For an exhaustive guide detailing every function, data flow mapping, and complete technology specs, refer to the **[Enterprise Reference & Technical Specifications Manual](file:///c:/Users/Priyanshu%20Patil/Documents/program01/sugriva/SYSTEM_REFERENCE.md)** or read the comprehensive system manual in **[COMPREHENSIVE_GUIDE.md](file:///c:/Users/Priyanshu%20Patil/Documents/program01/sugriva/COMPREHENSIVE_GUIDE.md)**.
 
+### 🔗 External Project Media & Resources:
+* **[Project Demonstration Video (Google Drive)](https://drive.google.com/file/d/15Ad03_hbdUpX0d7f3CzSAi242779vof7/view?usp=sharing)**
+* **[Project Functional Documentation (Google Docs)](https://docs.google.com/document/d/1Bl6Vi7zeb_eZAWXHxQvKc-hR3VPZf3NzulYtplEDmcE/edit?usp=sharing)**
+
 ---
 
 ## 1. System Architecture & Telemetry Pipeline
