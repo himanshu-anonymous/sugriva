@@ -208,63 +208,75 @@ gantt
 
 ---
 
-## 8. Running the MVP (Step-by-Step Instructions)
+## 8. Setup & Execution Instructions (Web GUI & Terminal TUI)
 
 ### 1. Prerequisites
-*   Docker and Docker Compose
-*   Python 3.10+
+* **Docker & Docker Compose** (to orchestrate Kafka, Redis, and Elasticsearch containers)
+* **Python 3.10+** (for backend engines)
+* **Node.js 18+ & npm** (for compiling the React dashboard)
 
-### 2. Startup Boot Sequence
+---
 
-#### Step A: Fire up the Infrastructure Containers
-Start the required backing services (Kafka, Redis, Elasticsearch):
+### 🚀 Launching the Web GUI Portal (Web App)
+
+Follow these steps to launch the security gateway, backend daemon, and browser-based control panel:
+
+#### Step A: Spin Up Backing Services
+Launch the Docker container stack (Kafka, Redis, Elasticsearch):
 ```bash
 docker-compose up -d
 ```
 
-#### Step B: Set Up and Activate the Virtual Environment
-Create your Python virtual environment and activate it:
-*   **Linux / macOS:**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate
-    ```
-*   **Windows (PowerShell):**
-    ```powershell
-    python -m venv venv
-    .\venv\Scripts\Activate.ps1
-    ```
+#### Step B: Start the Backend Daemon Orchestrator
+Open a terminal, activate your virtual environment, and run the Python orchestrator daemon:
+* **Windows (PowerShell):**
+  ```powershell
+  python -m venv venv
+  .\venv\Scripts\Activate.ps1
+  pip install -r requirements.txt
+  python run_mvp.py
+  ```
+* **Linux / macOS:**
+  ```bash
+  python -m venv venv
+  source venv/bin/activate
+  pip install -r requirements.txt
+  python run_mvp.py
+  ```
+*(This initializes the database schema, seeds mock records, and boots the FastAPI server on port `8000`)*
 
-#### Step C: Install Dependencies
-Install all requirements:
+#### Step C: Start the React Web Client
+Open a second terminal window, navigate to the web directory, install node packages, and run the Vite compiler:
 ```bash
-pip install -r requirements.txt
+cd sugriva-web
+npm install
+npm run dev
 ```
+Open **[http://localhost:3000/](http://localhost:3000/)** in your browser to access the Sugriva control center.
 
-#### Step D: Run the Orchestration Core
-Launch the main backend orchestrator which automatically runs fast-seeding (50,000 records, completes in ~4 seconds) and spins up FastAPI:
+---
+
+### 🖥️ Launching the Standalone Terminal UI (TUI)
+
+If you are running in a low-resource server terminal or command line, you can launch the curses TUI directly:
+
+#### Step A: Activate Virtual Environment
+Open a terminal and activate the project's Python virtual environment:
+* **Windows (PowerShell):**
+  ```powershell
+  .\venv\Scripts\Activate.ps1
+  ```
+* **Linux / macOS:**
+  ```bash
+  source venv/bin/activate
+  ```
+
+#### Step B: Launch the TUI Curses Application
+Run the standalone Textual demo script directly from the project root:
 ```bash
-python run_mvp.py
+python tui_template/run_demo.py
 ```
-
-#### Step E: Start the Stream Traffic Simulator (Optional)
-To generate continuous live transaction streams and spoof credential stuffing or liquidations, open another terminal window and run:
-```bash
-python tools/simulate_streams.py
-```
-
-#### Step F: Run the Live Terminal UI Dashboard
-Open a new terminal window, activate the virtual environment, and launch the interactive dashboard:
-```bash
-python tools/sugriva_terminal_ui.py
-```
-
-#### Step G: Run the Sugriva Textual TUI Template (Posting Integration)
-To run the advanced Textual template mimicking Posting's aesthetic grid layout:
-```powershell
-cd C:\Users\Priyanshu Patil\Documents\antigravity\happy-carson\tui_template
-& "C:\Users\Priyanshu Patil\Documents\program01\sugriva\venv\Scripts\python.exe" run_demo.py
-```
+*(This starts the interactive, keyboard-driven curses threat monitor and command terminal)*
 
 ---
 
