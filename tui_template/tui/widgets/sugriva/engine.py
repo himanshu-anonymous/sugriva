@@ -312,7 +312,7 @@ def _compute(
     pqc_w = round(min(0.4, pqc_failures * 0.15), 4)
     
     raw = 0.1 + ip_w + auth_w + amt_w + vel_w + qkd_w + entropy_w + pqc_w
-    score = round(_sigmoid(raw), 6)
+    score = round(_sigmoid(raw - 1.2), 6)
     
     return score, {
         "ip_anomaly": ip_w,

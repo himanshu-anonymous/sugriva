@@ -268,7 +268,7 @@ export function useSugrivaEngine() {
 
     const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
     const rawSum = 0.1 + ip_w + auth_w + amt_w + vel_w + qkd_w + entropy_w + pqc_w;
-    const score = parseFloat(sigmoid(rawSum).toFixed(6));
+    const score = parseFloat(sigmoid(rawSum - 1.2).toFixed(6));
 
     let escrow: TxRecord["escrow"] = "CLEAR";
     if (vpa.includes("mule")) {

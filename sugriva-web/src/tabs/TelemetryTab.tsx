@@ -36,7 +36,7 @@ export const TelemetryTab: React.FC<TelemetryTabProps> = ({ activeRail }) => {
   const getRiskColorClass = (risk: number) => {
     if (risk >= 0.75) return "row-danger";
     if (risk >= 0.50) return "row-warning";
-    return "";
+    return "row-normal";
   };
 
   return (
@@ -181,6 +181,9 @@ export const TelemetryTab: React.FC<TelemetryTabProps> = ({ activeRail }) => {
         }
         .row-warning {
           background-color: var(--warning-bg);
+        }
+        .row-normal {
+          background-color: #ffffff;
         }
         .flex-badge {
           display: inline-flex;
