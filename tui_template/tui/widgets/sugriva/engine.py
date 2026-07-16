@@ -8,6 +8,9 @@ import sqlite3
 import json
 import hashlib
 import re
+import base64
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -95,16 +98,47 @@ _pqc_failures: int = 0
 _last_audit_hash: str = "0" * 64
 
 
+DB_ENC_KEY: bytes = hashlib.pbkdf2_hmac("sha256", b"adminpassword", SALT, 100000)
+
+def encrypt_field(plaintext: str) -> str:
+    try:
+        cipher = AES.new(DB_ENC_KEY, AES.MODE_CBC)
+        ct_bytes = cipher.encrypt(pad(plaintext.encode('utf-8'), AES.block_size))
+        iv = base64.b64encode(cipher.iv).decode('utf-8')
+        ct = base64.b64encode(ct_bytes).decode('utf-8')
+        return f"{iv}:{ct}"
+    except Exception:
+        return plaintext
+
+def decrypt_field(ciphertext: str) -> str:
+    try:
+        if not ciphertext or ":" not in ciphertext:
+            return ciphertext
+        iv_b64, ct_b64 = ciphertext.split(":", 1)
+        iv = base64.b64decode(iv_b64)
+        ct = base64.b64decode(ct_b64)
+        cipher = AES.new(DB_ENC_KEY, AES.MODE_CBC, iv)
+        pt_bytes = unpad(cipher.decrypt(ct), AES.block_size)
+        return pt_bytes.decode('utf-8')
+    except Exception:
+        return ciphertext
+
+def get_db_connection() -> sqlite3.Connection:
+    conn = sqlite3.connect(DB_PATH)
+    conn.create_function("decrypt", 1, decrypt_field)
+    return conn
+
+
 def _init_db() -> None:
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS tx_ledger (
             timestamp TEXT,
             rail TEXT,
             network TEXT,
-            amount REAL,
+            amount TEXT,
             risk REAL,
             escrow TEXT,
             vpa TEXT,
@@ -326,11 +360,11 @@ def _make_record(
                 shap={"ip_anomaly": 0.0, "auth_discrepancy": 0.0, "velocity_impact": 0.0, "quantum_channel_instability": 0.0, "entropy_drain": 0.0, "pqc_decryption_anomalies": 0.0},
             )
             try:
-                conn = sqlite3.connect(DB_PATH)
+                conn = get_db_connection()
                 cursor = conn.cursor()
                 cursor.execute(
                     "INSERT INTO tx_ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    (rec.timestamp, rec.rail, rec.network, rec.amount, rec.risk, rec.escrow, rec.vpa, rec.ip, rec.velocity, json.dumps(rec.shap))
+                    (rec.timestamp, rec.rail, rec.network, encrypt_field(str(rec.amount)), rec.risk, rec.escrow, encrypt_field(rec.vpa), encrypt_field(rec.ip), rec.velocity, json.dumps(rec.shap))
                 )
                 conn.commit()
                 conn.close()
@@ -385,11 +419,11 @@ def _make_record(
 
     # Insert into persistent SQLite
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO tx_ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (rec.timestamp, rec.rail, rec.network, rec.amount, rec.risk, rec.escrow, rec.vpa, rec.ip, rec.velocity, json.dumps(rec.shap))
+            (rec.timestamp, rec.rail, rec.network, encrypt_field(str(rec.amount)), rec.risk, rec.escrow, encrypt_field(rec.vpa), encrypt_field(rec.ip), rec.velocity, json.dumps(rec.shap))
         )
         conn.commit()
         conn.close()
@@ -438,7 +472,7 @@ def get_rail_filter() -> str | None:
 
 def get_records(rail_filter: str | None = None) -> list[TxRecord]:
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_db_connection()
         cursor = conn.cursor()
         if rail_filter:
             cursor.execute("SELECT timestamp, rail, network, amount, risk, escrow, vpa, ip, velocity, shap FROM tx_ledger WHERE rail = ? ORDER BY rowid DESC LIMIT 500", (rail_filter,))
@@ -453,11 +487,11 @@ def get_records(rail_filter: str | None = None) -> list[TxRecord]:
                 timestamp=r[0],
                 rail=r[1],
                 network=r[2],
-                amount=r[3],
+                amount=float(decrypt_field(r[3])),
                 risk=r[4],
                 escrow=r[5],
-                vpa=r[6],
-                ip=r[7],
+                vpa=decrypt_field(r[6]),
+                ip=decrypt_field(r[7]),
                 velocity=r[8],
                 shap=json.loads(r[9])
             ))
@@ -468,7 +502,7 @@ def get_records(rail_filter: str | None = None) -> list[TxRecord]:
 
 def get_risk_counts() -> dict[str, int]:
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT risk FROM tx_ledger ORDER BY rowid DESC LIMIT 500")
         rows = cursor.fetchall()
@@ -527,7 +561,7 @@ def inject_quantum_exploit() -> None:
 
 def get_telemetry_stats() -> dict[str, int]:
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         cursor.execute("SELECT count(*) FROM tx_ledger WHERE escrow = 'CLEAR'")
@@ -539,7 +573,7 @@ def get_telemetry_stats() -> dict[str, int]:
         cursor.execute("SELECT count(*) FROM tx_ledger WHERE escrow = 'ISOLATED' OR escrow = 'RATE_LIMITED' OR escrow = 'AUTO_FROZEN'")
         threat_cnt = cursor.fetchone()[0] or 0
         
-        cursor.execute("SELECT count(*) FROM tx_ledger WHERE risk >= 0.75 AND (network = 'BLOCKED' OR vpa LIKE '%vault%')")
+        cursor.execute("SELECT count(*) FROM tx_ledger WHERE risk >= 0.75 AND (network = 'BLOCKED' OR decrypt(vpa) LIKE '%vault%')")
         quantum_threats = cursor.fetchone()[0] or 0
         
         conn.close()
