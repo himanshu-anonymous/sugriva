@@ -1,5 +1,9 @@
 # Project Sugriva: Enterprise Reference & Technical Specifications Manual
 
+**Author / Lead Developer:** Himanshu Patil  
+**Copyright:** © 2026 Himanshu Patil. All Rights Reserved.  
+**License:** [MIT License](./LICENSE)
+
 This document details the system specifications, data pipelines, function declarations, and technology frameworks powering Project Sugriva.
 
 ---
@@ -157,3 +161,12 @@ The table below lists every technology, framework, database, cache, linter, runt
 | `handleOtpSubmit(e)` | `void` | `e: React.FormEvent` | Compares the entered token with the active OTP generator. |
 | `processSdkFile(file)` | `void` | `file: File` | Uses FileReader to parse and verify the local SDK license signatures. |
 | `handleSignupSubmit(e)` | `void` | `e: React.FormEvent` | Creates profile signatures and exports the `sugriva_sdk_[vpa].json` file. |
+
+---
+
+## 7. Copyright & License
+
+* **Developer:** Himanshu Patil
+* **Copyright:** © 2026 Himanshu Patil. All Rights Reserved.
+* **License:** [MIT License](./LICENSE)
+

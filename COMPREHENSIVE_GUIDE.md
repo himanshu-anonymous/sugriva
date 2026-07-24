@@ -1,5 +1,9 @@
 # Project Sugriva: Comprehensive Enterprise System Documentation & Reference Manual
 
+**Author / Lead Developer:** Himanshu Patil  
+**Copyright:** © 2026 Himanshu Patil. All Rights Reserved.  
+**License:** [MIT License](./LICENSE)
+
 Welcome to the definitive reference manual for **Project Sugriva**—an enterprise-grade cyber-financial threat detection, correlation, and mitigation platform. 
 
 This manual traces the platform's lifecycle from initial ideation, through mathematical risk classification frameworks, down to step-by-step code modules and security designs.
@@ -178,3 +182,13 @@ The web UI's state is managed by `useSugrivaEngine()` in `src/state/mockEngine.t
 * **Financial Risk Mitigation:** Identifies and isolates complex fraud (mule accounts, high-volume floods) before transactions complete.
 * **Regulatory Readiness:** Built-in CERT-In incident tracking and tamper-proof audits ensure compliance with central bank reporting requirements.
 * **Horizontal Scalability:** Decoupled Kafka streaming queue architecture allows scaling processing workers independently as transaction volumes grow.
+
+---
+
+## 7. Document & Copyright Information
+
+* **Document Title:** Project Sugriva Comprehensive System Guide
+* **Developer:** Himanshu Patil
+* **Copyright:** © 2026 Himanshu Patil. All Rights Reserved.
+* **License:** [MIT License](./LICENSE)
+

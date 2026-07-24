@@ -1,3 +1,5 @@
+/* Copyright (c) 2026 Himanshu Patil. All rights reserved. */
+/* Developer: Himanshu Patil */
 import { useState } from "react";
 import { StoreProvider, useStore } from "./state/StoreContext";
 import { Navbar } from "./components/Navbar";

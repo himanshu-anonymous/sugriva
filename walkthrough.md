@@ -1,5 +1,9 @@
 # Walkthrough: Sugriva Web UI Control Center & Framer Navigation Migration
 
+**Author / Lead Developer:** Himanshu Patil  
+**Copyright:** © 2026 Himanshu Patil. All Rights Reserved.  
+**License:** [MIT License](./LICENSE)
+
 This document details the technical execution of transitioning the Sugriva Terminal UI dashboard into a high-fidelity React Web UI with custom authentication gates.
 
 ---
@@ -91,3 +95,13 @@ To verify that sensitive VPA, IP, and transaction amount fields are fully encryp
    * Transactions with warnings (`risk 0.50 - 0.75`) are highlighted with a **yellow** background tint.
    * Transaction anomalies with critical risk ratings (`risk >= 0.75`) are highlighted with a **red** background tint.
 3. Click the attack simulation panels in the footer to inject critical threats (e.g. credential stuffing or demat liquidations) and watch the alerts color dynamically in real time.
+
+---
+
+## 5. Copyright & Author Information
+
+**Project Sugriva** — Enterprise Cyber-Financial Threat Correlation & Mitigation Engine  
+**Developer:** Himanshu Patil  
+**Copyright:** © 2026 Himanshu Patil. All Rights Reserved.  
+**License:** [MIT License](./LICENSE)
+

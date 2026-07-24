@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Himanshu Patil. All rights reserved.
+# Author / Developer: Himanshu Patil
+
 import networkx as nx
 import torch
 import torch.nn.functional as F

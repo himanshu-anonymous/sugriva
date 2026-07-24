@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Himanshu Patil. All rights reserved.
+# Author / Developer: Himanshu Patil
+
 from __future__ import annotations
 import os
 import math

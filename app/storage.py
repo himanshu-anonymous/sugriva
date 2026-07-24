@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Himanshu Patil. All rights reserved.
+# Author / Developer: Himanshu Patil
+
 import sqlite3
 import redis
 from elasticsearch import Elasticsearch

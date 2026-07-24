@@ -1,3 +1,5 @@
+/* Copyright (c) 2026 Himanshu Patil. All rights reserved. */
+/* Developer: Himanshu Patil */
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'

@@ -61,7 +61,7 @@ export const Footer: React.FC = () => {
       </div>
 
       <div className="footer-system-info">
-        <span>SUGRIVA CORE v2.4 // SYSTEM STABLE</span>
+        <span>SUGRIVA CORE v2.4 // © 2026 Himanshu Patil. All Rights Reserved.</span>
       </div>
 
       <style>{`
