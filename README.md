@@ -7,7 +7,7 @@
 
 ---
 
-## 🏦 About Project Sugriva (Executive Summary)
+## 1. About Project Sugriva (Executive Summary)
 
 **SUGRIVA** is an all-inclusive, one-stop cyber-financial monitoring, analysis, and threat mitigation engine designed specifically for modern enterprise banking infrastructures and high-velocity payment switches (UPI, NEFT, RTGS, Cross-Border). 
 
@@ -21,7 +21,7 @@ From securing the initial admin login portal via a Zero-Trust 3-phase access gat
 
 ---
 
-## ⚡ 1. Primary USP (USP-1): 0.8ms – 3.5ms Ultra-Low Pipeline Latency
+## 2. Primary USP (USP-1): 0.8ms – 3.5ms Ultra-Low Pipeline Latency
 
 > **Sugriva's Primary USP:** While traditional banking engines require 150ms–500ms and deliver post-facto alerts *after* money has left the bank, **Sugriva executes the entire end-to-end security pipeline in just 0.8ms – 3.5ms**, isolating threats pre-settlement while immunizing payloads against future quantum supercomputers.
 
@@ -37,25 +37,25 @@ From securing the initial admin login portal via a Zero-Trust 3-phase access gat
 
 ---
 
-## 📊 2. Workflow & Feature Comparison Charts
+## 3. Workflow & Feature Comparison Charts
 
-### 🔄 2.1. Architectural Flowchart: Traditional vs. Sugriva
+### 3.1. Architectural Flowchart: Traditional vs. Sugriva
 
 ```mermaid
 flowchart TD
-    subgraph TRADITIONAL ["❌ TRADITIONAL ENGINES (Splunk, Feedzai, Datadog)"]
-        nodeA1["💳 Transaction Executed"] --> nodeA2["💸 Money Leaves Bank Account"]
-        nodeA2 --> nodeA3["📥 Log Ingested by SIEM (5s - 5m later)"]
-        nodeA3 --> nodeA4["🚨 Post-Facto Alert Sent (Money Already Stolen!)"]
-        nodeA4 --> nodeA5["⚠️ Vulnerable to HNDL & Erased Admin Logs"]
+    subgraph TRADITIONAL ["TRADITIONAL ENGINES (Splunk, Feedzai, Datadog)"]
+        nodeA1["Transaction Executed"] --> nodeA2["Money Leaves Bank Account"]
+        nodeA2 --> nodeA3["Log Ingested by SIEM (5s - 5m later)"]
+        nodeA3 --> nodeA4["Post-Facto Alert Sent (Money Already Stolen!)"]
+        nodeA4 --> nodeA5["Vulnerable to HNDL & Erased Admin Logs"]
     end
 
-    subgraph SUGRIVA ["⚡ SUGRIVA QUANTUM USP (Pre-Settlement Defense)"]
-        nodeB1["💳 Transaction Initiated"] --> nodeB2["⚛️ Quantum Sensing Check (QKD & TRNG)"]
-        nodeB2 --> nodeB3["🔐 Kyber-1024 Lattice Envelope (0.04ms)"]
-        nodeB3 --> nodeB4{"🛡️ SHAP Threat Evaluation (<1ms)"}
-        nodeB4 -- "Threat / Wiretap Detected" --> nodeB5["🛑 INSTANT FREEZE BEFORE SETTLEMENT"]
-        nodeB4 -- "Valid & Clean" --> nodeB6["✅ Instant Settlement & WORM Merkle Sealed"]
+    subgraph SUGRIVA ["SUGRIVA QUANTUM USP (Pre-Settlement Defense)"]
+        nodeB1["Transaction Initiated"] --> nodeB2["Quantum Sensing Check (QKD & TRNG)"]
+        nodeB2 --> nodeB3["Kyber-1024 Lattice Envelope (0.04ms)"]
+        nodeB3 --> nodeB4{"SHAP Threat Evaluation (<1ms)"}
+        nodeB4 -- "Threat / Wiretap Detected" --> nodeB5["INSTANT FREEZE BEFORE SETTLEMENT"]
+        nodeB4 -- "Valid & Clean" --> nodeB6["Instant Settlement & WORM Merkle Sealed"]
     end
 
     style TRADITIONAL fill:#fff0f0,stroke:#ff4d4d,stroke-width:2px
@@ -66,20 +66,20 @@ flowchart TD
 
 ---
 
-### 📊 2.2. Sugriva vs. Traditional Banking Engines
+### 3.2. Sugriva vs. Traditional Banking Engines
 
-| Security & Performance Metric | Traditional Banking Engines *(Splunk, Feedzai, QRadar)* | ⚡ **Sugriva Enterprise Banking Engine** | **Banking Advantage** |
+| Security & Performance Metric | Traditional Banking Engines *(Splunk, Feedzai, QRadar)* | **Sugriva Enterprise Banking Engine** | **Banking Advantage** |
 | :--- | :--- | :--- | :--- |
-| **Total Pipeline Latency** | **150 ms – 500 ms** *(Slow network roundtrips to external vaults)* | **0.8 ms – 3.5 ms** | 🚀 **50x to 100x FASTER** |
-| **Response Timing** | **Post-Facto** *(Alerts 5s–5m AFTER money leaves)* | **In-Line Pre-Settlement (<1ms)** | 🛡️ **Stops the thief BEFORE settlement** |
-| **Encryption Standard** | **RSA-4096 / ECC** *(Broken by Quantum Computers)* | **NIST Kyber-1024 & Dilithium3** | 🔒 **Immune to "Steal Now, Open in 2030" attacks** |
-| **Physical Sensing** | **Basic Server Metrics** *(CPU & Memory only)* | **QKD Photons & TRNG Entropy** | ⚛️ **Detects optical fiber wiretaps in real time** |
-| **Audit Ledger Security** | **Standard Syslog** *(Modifiable by root admins)* | **Immutable SHA-256 Merkle Chain** | ⛓️ **Tamper-evident regulatory chain of custody** |
-| **Compliance Exports** | **Manual CSV Exports** | **ISO 20022 XML & RFC 5424 Syslog** | 📜 **Native SWIFT/UPI ISO 20022 compliance** |
+| **Total Pipeline Latency** | **150 ms – 500 ms** *(Slow network roundtrips to external vaults)* | **0.8 ms – 3.5 ms** | **50x to 100x FASTER** |
+| **Response Timing** | **Post-Facto** *(Alerts 5s–5m AFTER money leaves)* | **In-Line Pre-Settlement (<1ms)** | **Stops the thief BEFORE settlement** |
+| **Encryption Standard** | **RSA-4096 / ECC** *(Broken by Quantum Computers)* | **NIST Kyber-1024 & Dilithium3** | **Immune to "Steal Now, Open in 2030" attacks** |
+| **Physical Sensing** | **Basic Server Metrics** *(CPU & Memory only)* | **QKD Photons & TRNG Entropy** | **Detects optical fiber wiretaps in real time** |
+| **Audit Ledger Security** | **Standard Syslog** *(Modifiable by root admins)* | **Immutable SHA-256 Merkle Chain** | **Tamper-evident regulatory chain of custody** |
+| **Compliance Exports** | **Manual CSV Exports** | **ISO 20022 XML & RFC 5424 Syslog** | **Native SWIFT/UPI ISO 20022 compliance** |
 
 ---
 
-## 🚀 3. Quickstart Guide (System Setup for Testing & Presentation)
+## 4. Quickstart Guide (System Setup for Testing & Presentation)
 
 ### Option A: Web Dashboard Presentation Mode (Fast 1-Minute Launch)
 *Best for live testing, presentations, and offline client demonstrations without Docker:*
@@ -132,25 +132,25 @@ npm run dev
 
 ---
 
-## 🔢 4. Complete 48 Dynamic Pipeline Parameters & 168 Filters Spec
+## 5. Complete 48 Dynamic Pipeline Parameters & 168 Filters Spec
 
 Sugriva processes transactions through **48 dynamic pipeline parameters** and **168 domain rules**:
 
-### 4.1. Core Transaction & Cryptographic Pipeline Parameters (27)
+### 5.1. Core Transaction & Cryptographic Pipeline Parameters (27)
 `id`, `timestamp`, `rail`, `network`, `amount`, `risk`, `escrow`, `vpa`, `ip`, `velocity`, `flagged`, `flagReason`, `flagType`, `mitreTactics`, `authDetails.tokenStatus`, `authDetails.mfaChallenge`, `authDetails.zeroTrustScore`, `authDetails.authDecision`, `dbStatus.acidTxId`, `dbStatus.tableState`, `dbStatus.rollbackTriggered`, `dbStatus.latencyMs`, `cryptoLogs.piiTokenizer.rawSample`, `cryptoLogs.piiTokenizer.blindHmac`, `cryptoLogs.piiTokenizer.aesToken`, `cryptoLogs.hmacSigner.calculatedSig`, `cryptoLogs.aesEnvelope.tag`.
 
-### 4.2. SHAP Anomaly Feature Weight Parameters (6)
+### 5.2. SHAP Anomaly Feature Weight Parameters (6)
 `shap.ip_anomaly`, `shap.auth_discrepancy`, `shap.velocity_impact`, `shap.quantum_channel_instability`, `shap.entropy_drain`, `shap.pqc_decryption_anomalies`.
 
-### 4.3. Quantum Sensing & System Control Parameters (6)
+### 5.3. Quantum Sensing & System Control Parameters (6)
 `qkdCoherence`, `trngEntropy`, `pqcFailures`, `threshold`, `circuitBreaker`, `lastAuditHash`.
 
-### 4.4. Filtration & Interactive Controls (9)
+### 5.4. Filtration & Interactive Controls (9)
 `Payment Rail Filter`, `Anomaly / Flagged Only Toggle`, `Flag Type Filter`, `Priority Sorting Toggle`, `Parameter Sorting Switch`, `Attack Category Filter`, `Node Search & Retrace Input`, `System Graph Parameter Switch`, `ISO 20022 XML Schema Exporter`.
 
 ---
 
-## 📜 5. Statutory Compliance & Reporting
+## 6. Statutory Compliance & Reporting
 
 - **ISO 20022 XML Messages:** Formats transactions into standard `pacs.008.001.10` credit transfer schemas with Sugriva PQC headers (`<SugrivaSecurityHeader>`).
 - **RFC 5424 Syslog Stream:** Real-time standardized Syslog output for Splunk, QRadar, and Datadog aggregators.
@@ -158,7 +158,7 @@ Sugriva processes transactions through **48 dynamic pipeline parameters** and **
 
 ---
 
-## 📄 6. Copyright & Author Information
+## 7. Copyright & Author Information
 
 **Project Sugriva** — Enterprise Cyber-Financial Threat Correlation & Mitigation Engine  
 **Lead Developer:** Himanshu Patil  
