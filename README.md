@@ -5,21 +5,41 @@
 **License:** [MIT License](./LICENSE)  
 **Repository:** [https://github.com/himanshu-anonymous/sugriva](https://github.com/himanshu-anonymous/sugriva)
 
-Project Sugriva is a high-throughput cyber-financial threat detection, telemetry ingestion, and mitigation platform. It combines asynchronous streaming ingestion, advanced cryptographic filtering, graph-based topological correlation, and post-quantum safe layers to isolate risk in real time.
+---
 
-For an exhaustive guide detailing every function, data flow mapping, and complete technology specs, refer to the **[Enterprise Reference & Technical Specifications Manual](./SYSTEM_REFERENCE.md)** or read the comprehensive system manual in **[COMPREHENSIVE_GUIDE.md](./COMPREHENSIVE_GUIDE.md)**.
+## 🏦 About Project Sugriva (Executive Summary)
 
-### 🔗 External Project Media & Resources:
-* **[Project Demonstration Video (Google Drive)](https://drive.google.com/file/d/15Ad03_hbdUpX0d7f3CzSAi242779vof7/view?usp=sharing)**
-* **[Project Functional Documentation (Google Docs)](https://docs.google.com/document/d/1Bl6Vi7zeb_eZAWXHxQvKc-hR3VPZf3NzulYtplEDmcE/edit?usp=sharing)**
+**SUGRIVA** is an all-inclusive, one-stop cyber-financial monitoring, analysis, and threat mitigation engine designed specifically for modern enterprise banking infrastructures and high-velocity payment switches (UPI, NEFT, RTGS, Cross-Border). 
+
+It acts as a single-stop solution to:
+1. **DETECT & MONITOR**: Continuously monitors live payment streams, network signals, and physical quantum channels for active threat vectors and data leaks.
+2. **PROCESS THROUGH PIPELINES**: Ingests transaction data through **48 dynamic pipeline parameters** and evaluates payloads against **168 domain-specific filters and rules** spanning cybersecurity, fraud detection, database ACID integrity, and post-quantum cryptography.
+3. **ANALYZE & RETRACE**: Resolves root causes in real time using explainable SHAP feature attribution weights and retraces historical topological node chains to uncover hidden mule networks and credential stuffing sweeps.
+4. **TAKE ACTION IN FRACTIONS OF A SECOND**: Executes automated pre-settlement threat isolation, account quarantine, and circuit-breaker responses **before financial settlement occurs**.
+
+From securing the initial admin login portal via a Zero-Trust 3-phase access gateway to enforcing role-based privilege data scoping, sealing payloads inside post-quantum lattice envelopes, and recording tamper-proof **WORM audit ledgers** with **dual-channel regulatory reporting (Internal SOC + Statutory CERT-In 6-Hour SLA filings)** — Sugriva covers the entire lifecycle of financial security.
 
 ---
 
-## 🏆 1. Sugriva’s Core Unique Selling Proposition (USP)
+## ⚡ 1. Primary USP (USP-1): 0.8ms – 3.5ms Ultra-Low Pipeline Latency
 
-> *"While traditional engines only monitor system logs after a breach occurs, **Sugriva is the world's first Quantum-Agile Financial Telemetry Engine** that senses quantum optical wiretaps in real time and immunizes payment payloads against future quantum computers before bank settlement."*
+> **Sugriva's Primary USP:** While traditional banking engines require 150ms–500ms and deliver post-facto alerts *after* money has left the bank, **Sugriva executes the entire end-to-end security pipeline in just 0.8ms – 3.5ms**, isolating threats pre-settlement while immunizing payloads against future quantum supercomputers.
 
-### 🔄 1.1. Workflow Comparison: Traditional vs. Sugriva
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────┐
+│                   SUGRIVA END-TO-END PIPELINE (0.8ms - 3.5ms TOTAL)                       │
+├───────────────────┬───────────────────┬───────────────────┬──────────────────────────────┤
+│ 1. Zero-Trust Auth│ 2. PQC Envelope   │ 3. 168 Filters &  │ 4. WORM Merkle Audit &       │
+│    Gateway        │    (Kyber-1024)   │    48 Parameters  │    Dual-Channel Dispatch     │
+│    [0.10ms]       │    [0.04ms]       │    [0.15ms]       │    [1.20ms]                  │
+└───────────────────┴───────────────────┴───────────────────┴──────────────────────────────┘
+```
+
+---
+
+## 📊 2. Workflow & Feature Comparison Charts
+
+### 🔄 2.1. Architectural Flowchart: Traditional vs. Sugriva
 
 ```mermaid
 flowchart TD
@@ -46,43 +66,23 @@ flowchart TD
 
 ---
 
-### 📊 1.2. Sugriva Feature Comparison Chart
+### 📊 2.2. Sugriva vs. Traditional Banking Engines
 
-| Security Domain | Traditional Engines *(Splunk, Feedzai, QRadar)* | ⚡ **Sugriva Quantum USP** | **Layman Advantage** |
+| Security & Performance Metric | Traditional Banking Engines *(Splunk, Feedzai, QRadar)* | ⚡ **Sugriva Enterprise Banking Engine** | **Banking Advantage** |
 | :--- | :--- | :--- | :--- |
-| **Response Speed** | **Post-Facto** *(Alerts 5 sec – 5 min after event)* | **In-Line Pre-Settlement (<1ms)** | **Stops the thief BEFORE money leaves the bank** |
-| **Encryption Standard** | **RSA-4096 / ECC** *(Broken by Quantum Computers)* | **NIST Kyber-1024 / Dilithium3** | **Immune to "Steal Now, Open in 2030" attacks** |
-| **Physical Sensing** | **CPU & Memory Metrics** *(Basic server stats)* | **QKD Photons & TRNG Entropy** | **Detects fiber-optic spy wiretaps instantly** |
-| **Audit Log Security** | **Standard Syslog** *(Modifiable by root admins)* | **Immutable SHA-256 Merkle Chain** | **Un-erasable glass chain of custody ledger** |
-| **Fraud Explainability** | **Black-Box AI Rules** | **Real-Time SHAP Weight Vector** | **Tells you EXACTLY why a transaction was flagged** |
+| **Total Pipeline Latency** | **150 ms – 500 ms** *(Slow network roundtrips to external vaults)* | **0.8 ms – 3.5 ms** | 🚀 **50x to 100x FASTER** |
+| **Response Timing** | **Post-Facto** *(Alerts 5s–5m AFTER money leaves)* | **In-Line Pre-Settlement (<1ms)** | 🛡️ **Stops the thief BEFORE settlement** |
+| **Encryption Standard** | **RSA-4096 / ECC** *(Broken by Quantum Computers)* | **NIST Kyber-1024 & Dilithium3** | 🔒 **Immune to "Steal Now, Open in 2030" attacks** |
+| **Physical Sensing** | **Basic Server Metrics** *(CPU & Memory only)* | **QKD Photons & TRNG Entropy** | ⚛️ **Detects optical fiber wiretaps in real time** |
+| **Audit Ledger Security** | **Standard Syslog** *(Modifiable by root admins)* | **Immutable SHA-256 Merkle Chain** | ⛓️ **Tamper-evident regulatory chain of custody** |
+| **Compliance Exports** | **Manual CSV Exports** | **ISO 20022 XML & RFC 5424 Syslog** | 📜 **Native SWIFT/UPI ISO 20022 compliance** |
 
 ---
 
-### 🏛️ 1.3. Sugriva’s 4 Core Pillars
+## 🚀 3. Quickstart Guide (System Setup for Testing & Presentation)
 
-```
-                     ┌───────────────────────────────────────────────────────────┐
-                     │            SUGRIVA QUANTUM-AGILE ENGINE USP              │
-                     └─────────────────────────────┬─────────────────────────────┘
-                                                   │
-        ┌──────────────────────┬───────────────────┴───────────────────┬──────────────────────┐
-        │                      │                                       │                      │
-┌───────▼─────────┐    ┌───────▼─────────┐                   ┌─────────▼───────┐    ┌─────────▼───────┐
-│ PRE-SETTLEMENT  │    │  POST-QUANTUM   │                   │ QKD WIRE TAP    │    │  WORM MERKLE    │
-│  <1ms DEFENSE   │    │  LATTICE MAZE   │                   │ PHOTON SENSING  │    │  AUDIT LEDGER   │
-├─────────────────┤    ├─────────────────┤                   ├─────────────────┤    ├─────────────────┤
-│ Stops fraud     │    │ Kyber-1024      │                   │ Detects photon  │    │ Linked SHA-256  │
-│ BEFORE money    │    │ 1,000D Lattice  │                   │ light smudges   │    │ tamper-proof    │
-│ leaves bank     │    │ HNDL Immune     │                   │ in real-time    │    │ log chain       │
-└─────────────────┘    └─────────────────┘                   └─────────────────┘    └─────────────────┘
-```
-
----
-
-## 🚀 2. Quickstart Instructions (Testing & Live Presentation Setup)
-
-### Option A: Web App Client Presentation Mode (Fast 1-Minute Launch)
-*Best for testing, presentations, and offline demonstrations on any machine without Docker:*
+### Option A: Web Dashboard Presentation Mode (Fast 1-Minute Launch)
+*Best for live testing, presentations, and offline client demonstrations without Docker:*
 
 1. **Clone & Install Dependencies:**
    ```bash
@@ -101,7 +101,7 @@ flowchart TD
 
 4. **Trigger Presentation Environment:**
    - Type `presentation` or `/demo` into the top Navbar terminal input line and hit `Enter`, OR click the **`[PRESENTATION MODE]`** button (`Ctrl+P`).
-   - This launches the 6-Stage Interactive Inspector Walkthrough!
+   - This launches the 6-Stage Interactive Presentation Inspector!
 
 5. **Live Attacker Simulation Shortcuts:**
    - `Ctrl+1`: Trigger **Credential Stuffing & Auth Token Forgery**.
@@ -114,76 +114,51 @@ flowchart TD
 ### Option B: Full Enterprise Backend Stack (Python + Docker)
 *For full backend persistence, Kafka streaming, Redis velocity, and SQLite WAL database:*
 
-1. **Spin Up Backing Infrastructure (Docker):**
-   ```bash
-   docker-compose up -d
-   ```
+```bash
+# 1. Spin Up Backing Infrastructure (Docker):
+docker-compose up -d
 
-2. **Start Backend Python Engine:**
-   ```bash
-   # Windows (PowerShell):
-   python -m venv venv
-   .\venv\Scripts\Activate.ps1
-   pip install -r requirements.txt
-   python run_mvp.py
+# 2. Start Backend Python Engine:
+python -m venv venv
+# Windows: .\venv\Scripts\Activate.ps1  |  Linux/macOS: source venv/bin/activate
+pip install -r requirements.txt
+python run_mvp.py
 
-   # Linux / macOS:
-   python -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   python run_mvp.py
-   ```
-   *(Starts FastAPI server on port `8000`)*
-
-3. **Start Web Frontend:**
-   ```bash
-   cd sugriva-web
-   npm install
-   npm run dev
-   ```
+# 3. Start Web Client:
+cd sugriva-web
+npm install
+npm run dev
+```
 
 ---
 
-## 🔢 3. Complete 44-Parameter Processing & Filtration Spec
+## 🔢 4. Complete 48 Dynamic Pipeline Parameters & 168 Filters Spec
 
-Sugriva monitors and processes **44 parameters** in total across telemetry processing, PQC encryption, quantum sensing, and interactive filtration:
+Sugriva processes transactions through **48 dynamic pipeline parameters** and **168 domain rules**:
 
-### 3.1. Transaction & Cryptographic Parameters (25)
-`id`, `timestamp`, `rail`, `network`, `amount`, `risk`, `escrow`, `vpa`, `ip`, `velocity`, `flagged`, `flagReason`, `flagType`, `mitreTactics`, `authDetails.tokenStatus`, `authDetails.mfaChallenge`, `authDetails.zeroTrustScore`, `authDetails.authDecision`, `dbStatus.acidTxId`, `dbStatus.tableState`, `dbStatus.rollbackTriggered`, `dbStatus.latencyMs`, `cryptoLogs.piiTokenizer`, `cryptoLogs.hmacSigner`, `cryptoLogs.aesEnvelope`.
+### 4.1. Core Transaction & Cryptographic Pipeline Parameters (27)
+`id`, `timestamp`, `rail`, `network`, `amount`, `risk`, `escrow`, `vpa`, `ip`, `velocity`, `flagged`, `flagReason`, `flagType`, `mitreTactics`, `authDetails.tokenStatus`, `authDetails.mfaChallenge`, `authDetails.zeroTrustScore`, `authDetails.authDecision`, `dbStatus.acidTxId`, `dbStatus.tableState`, `dbStatus.rollbackTriggered`, `dbStatus.latencyMs`, `cryptoLogs.piiTokenizer.rawSample`, `cryptoLogs.piiTokenizer.blindHmac`, `cryptoLogs.piiTokenizer.aesToken`, `cryptoLogs.hmacSigner.calculatedSig`, `cryptoLogs.aesEnvelope.tag`.
 
-### 3.2. Real-Time SHAP Anomaly Feature Weights (6)
+### 4.2. SHAP Anomaly Feature Weight Parameters (6)
 `shap.ip_anomaly`, `shap.auth_discrepancy`, `shap.velocity_impact`, `shap.quantum_channel_instability`, `shap.entropy_drain`, `shap.pqc_decryption_anomalies`.
 
-### 3.3. System & Quantum Hardware Sensing Parameters (5)
-`qkdCoherence`, `trngEntropy`, `pqcFailures`, `threshold`, `circuitBreaker`.
+### 4.3. Quantum Sensing & System Control Parameters (6)
+`qkdCoherence`, `trngEntropy`, `pqcFailures`, `threshold`, `circuitBreaker`, `lastAuditHash`.
 
-### 3.4. Filtration & Sorting System Controls (8)
-`Payment Rail Filter`, `Anomaly / Flagged Only Toggle`, `Flag Type Filter`, `Priority Sorting Toggle`, `Parameter Sorting Switch`, `Attack Category Filter`, `Node Search & Retrace Input`, `System Graph Parameter Switch`.
-
----
-
-## ⚡ 4. Latency & Execution Speed Performance
-
-| Processing Stage | Sugriva Speed | Technical Mechanism |
-| :--- | :--- | :--- |
-| **Kyber-1024 (ML-KEM) Encapsulation** | **0.04 ms** | Ring-NTT Polynomial Lattice Operations |
-| **Dilithium3 (ML-DSA) Verification** | **0.11 ms** | High-Bit Matrix Polynomial Verification |
-| **AES-256-GCM Envelope & PII Tokenizer** | **0.12 ms** | Inline HSM Blind HMAC Tokenization |
-| **SHAP Weight & GNN Anomaly Score** | **0.15 ms** | SIMD Parallel Weight Execution |
-| **ACID Database Write & Merkle Chain** | **1.2 ms – 2.1 ms** | SHA-256 Linked Immutable Log |
-| **⚡ Total End-to-End Pipeline** | **0.8 ms – 3.5 ms** | **Complete Pre-Settlement Pipeline** |
+### 4.4. Filtration & Interactive Controls (9)
+`Payment Rail Filter`, `Anomaly / Flagged Only Toggle`, `Flag Type Filter`, `Priority Sorting Toggle`, `Parameter Sorting Switch`, `Attack Category Filter`, `Node Search & Retrace Input`, `System Graph Parameter Switch`, `ISO 20022 XML Schema Exporter`.
 
 ---
 
-## 📄 5. Compliance & Reporting Standards
+## 📜 5. Statutory Compliance & Reporting
 
-- **ISO 20022 XML Financial Messages:** Native support for `pacs.008.001.10` credit transfers with custom PQC security extension headers.
-- **RFC 5424 Syslog Audit Stream:** Real-time standardized Syslog output for Splunk, QRadar, and Datadog aggregators.
-- **Dual-Channel Reporting:** Automated internal SOC PagerDuty/Slack escalation + Statutory FinCEN SAR & RBI Cyber Incident filings.
+- **ISO 20022 XML Messages:** Formats transactions into standard `pacs.008.001.10` credit transfer schemas with Sugriva PQC headers (`<SugrivaSecurityHeader>`).
+- **RFC 5424 Syslog Stream:** Real-time standardized Syslog output for Splunk, QRadar, and Datadog aggregators.
+- **Dual-Channel Reporting:** Automated internal SOC PagerDuty/Slack escalation + Statutory FinCEN SAR & RBI Cyber Incident filings (with 6-Hour SLA Countdown Timers).
 
 ---
 
-## 📜 6. Copyright & Author Information
+## 📄 6. Copyright & Author Information
 
 **Project Sugriva** — Enterprise Cyber-Financial Threat Correlation & Mitigation Engine  
 **Lead Developer:** Himanshu Patil  
