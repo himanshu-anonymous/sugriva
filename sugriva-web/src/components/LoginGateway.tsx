@@ -758,7 +758,7 @@ export const LoginGateway: React.FC = () => {
           </motion.form>
         )}
         <div style={{ textAlign: "center", marginTop: "16px", fontSize: "11px", color: "var(--color-text-muted)", fontWeight: 600 }}>
-          © 2026 Himanshu Patil. All Rights Reserved. | Developer: Himanshu Patil
+          © 2026 Team - SUGRIVA. All Rights Reserved. | Developer: Team - SUGRIVA
         </div>
       </div>
     </div>

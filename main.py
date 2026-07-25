@@ -1,5 +1,5 @@
-# Copyright (c) 2026 Himanshu Patil. All rights reserved.
-# Author / Developer: Himanshu Patil
+# Copyright (c) 2026 Team - SUGRIVA. All rights reserved.
+# Author / Developer: Team - SUGRIVA
 
 import asyncio
 import os

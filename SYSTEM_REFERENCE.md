@@ -1,7 +1,7 @@
 # Project Sugriva: Enterprise Reference & Technical Specifications Manual
 
-**Author / Lead Developer:** Himanshu Patil  
-**Copyright:** © 2026 Himanshu Patil. All Rights Reserved.  
+**Author / Lead Developer:** Team - SUGRIVA  
+**Copyright:** © 2026 Team - SUGRIVA. All Rights Reserved.  
 **License:** [MIT License](./LICENSE)
 
 This document details the system specifications, data pipelines, function declarations, and technology frameworks powering Project Sugriva.
@@ -166,7 +166,7 @@ The table below lists every technology, framework, database, cache, linter, runt
 
 ## 7. Copyright & License
 
-* **Developer:** Himanshu Patil
-* **Copyright:** © 2026 Himanshu Patil. All Rights Reserved.
+* **Developer:** Team - SUGRIVA
+* **Copyright:** © 2026 Team - SUGRIVA. All Rights Reserved.
 * **License:** [MIT License](./LICENSE)
 

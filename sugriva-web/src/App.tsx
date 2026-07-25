@@ -1,5 +1,5 @@
-/* Copyright (c) 2026 Himanshu Patil. All rights reserved. */
-/* Developer: Himanshu Patil */
+/* Copyright (c) 2026 Team - SUGRIVA. All rights reserved. */
+/* Developer: Team - SUGRIVA */
 import { useState } from "react";
 import { StoreProvider, useStore } from "./state/StoreContext";
 import { Navbar } from "./components/Navbar";

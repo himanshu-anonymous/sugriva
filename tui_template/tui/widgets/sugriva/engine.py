@@ -1,5 +1,5 @@
-# Copyright (c) 2026 Himanshu Patil. All rights reserved.
-# Author / Developer: Himanshu Patil
+# Copyright (c) 2026 Team - SUGRIVA. All rights reserved.
+# Author / Developer: Team - SUGRIVA
 
 from __future__ import annotations
 import os

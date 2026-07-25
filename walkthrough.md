@@ -1,7 +1,7 @@
 # Walkthrough: Sugriva Web UI Control Center & Framer Navigation Migration
 
-**Author / Lead Developer:** Himanshu Patil  
-**Copyright:** © 2026 Himanshu Patil. All Rights Reserved.  
+**Author / Lead Developer:** Team - SUGRIVA  
+**Copyright:** © 2026 Team - SUGRIVA. All Rights Reserved.  
 **License:** [MIT License](./LICENSE)
 
 This document details the technical execution of transitioning the Sugriva Terminal UI dashboard into a high-fidelity React Web UI with custom authentication gates.
@@ -101,7 +101,7 @@ To verify that sensitive VPA, IP, and transaction amount fields are fully encryp
 ## 5. Copyright & Author Information
 
 **Project Sugriva** — Enterprise Cyber-Financial Threat Correlation & Mitigation Engine  
-**Developer:** Himanshu Patil  
-**Copyright:** © 2026 Himanshu Patil. All Rights Reserved.  
+**Developer:** Team - SUGRIVA  
+**Copyright:** © 2026 Team - SUGRIVA. All Rights Reserved.  
 **License:** [MIT License](./LICENSE)
 

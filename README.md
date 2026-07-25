@@ -1,7 +1,7 @@
 # Project Sugriva: Enterprise Cyber-Financial Threat Correlation & Mitigation Engine
 
-**Author / Lead Developer:** Himanshu Patil  
-**Copyright:** © 2026 Himanshu Patil. All Rights Reserved.  
+**Author / Lead Developer:** Team - SUGRIVA  
+**Copyright:** © 2026 Team - SUGRIVA. All Rights Reserved.  
 **License:** [MIT License](./LICENSE)  
 **Repository:** [https://github.com/himanshu-anonymous/sugriva](https://github.com/himanshu-anonymous/sugriva)
 
@@ -161,7 +161,7 @@ Sugriva processes transactions through **48 dynamic pipeline parameters** and **
 ## 7. Copyright & Author Information
 
 **Project Sugriva** — Enterprise Cyber-Financial Threat Correlation & Mitigation Engine  
-**Lead Developer:** Himanshu Patil  
+**Lead Developer:** Team - SUGRIVA  
 **Repository:** [https://github.com/himanshu-anonymous/sugriva](https://github.com/himanshu-anonymous/sugriva)  
-**Copyright:** © 2026 Himanshu Patil. All Rights Reserved.  
+**Copyright:** © 2026 Team - SUGRIVA. All Rights Reserved.  
 Licensed under the [MIT License](./LICENSE).
