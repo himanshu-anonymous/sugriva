@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useStore } from "../state/StoreContext";
 import { checkAdminPassword } from "../state/mockEngine";
 import { motion, AnimatePresence } from "framer-motion";
-import { Terminal, Cpu, Lock, Unlock, PlayCircle, StopCircle } from "lucide-react";
+import { Terminal, Lock, Unlock, PlayCircle, StopCircle } from "lucide-react";
 
 export const Navbar: React.FC = () => {
   const {
@@ -163,18 +163,6 @@ export const Navbar: React.FC = () => {
           />
           <span className="status-label">INGESTION ACTIVE</span>
         </div>
-
-        {/* Quantum radar */}
-        <div className="quantum-radar">
-          <motion.div 
-            className="radar-spinner"
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-          >
-            <Cpu size={14} />
-          </motion.div>
-          <span className="radar-label">QKD MONITORED</span>
-        </div>
       </div>
 
       {/* Terminal Command Input Form */}
@@ -278,23 +266,6 @@ export const Navbar: React.FC = () => {
           height: 6px;
           background-color: var(--success-color);
           border-radius: 50%;
-        }
-        .quantum-radar {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          background-color: var(--quantum-bg);
-          border: 1px solid var(--quantum-color);
-          padding: 4px 10px;
-          border-radius: 2px;
-          font-size: 11px;
-          color: var(--quantum-color);
-          font-weight: bold;
-        }
-        .radar-spinner {
-          display: flex;
-          align-items: center;
-          justify-content: center;
         }
         .console-form {
           position: relative;
