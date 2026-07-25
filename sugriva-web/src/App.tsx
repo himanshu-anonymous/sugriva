@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { StoreProvider, useStore } from "./state/StoreContext";
 import { Navbar } from "./components/Navbar";
+import { EventQueueBanner } from "./components/EventQueueBanner";
+import { PresentationEnvironment } from "./components/PresentationEnvironment";
 import { Footer } from "./components/Footer";
 import { PaymentRailBrowser } from "./components/PaymentRailBrowser";
 import { TabWorkspace } from "./components/TabWorkspace";
@@ -11,7 +13,7 @@ import { LoginGateway } from "./components/LoginGateway";
 import "./styles/index.css";
 
 function DashboardContent() {
-  const { isAuthenticated } = useStore();
+  const { isAuthenticated, isPresentationMode } = useStore();
   const [activeRail, setActiveRail] = useState<string | null>(null);
 
   if (!isAuthenticated) {
@@ -22,6 +24,9 @@ function DashboardContent() {
     <div id="root">
       {/* Top Navbar */}
       <Navbar />
+
+      {/* Persistent Real-Time Event Management & Queue Banner on every page */}
+      <EventQueueBanner />
 
       {/* Main Grid View */}
       <div className="dashboard-grid">
@@ -34,6 +39,9 @@ function DashboardContent() {
         {/* Right Dynamic Risk & SHAP progress weights */}
         <RightRiskPanel />
       </div>
+
+      {/* Presentation Environment Overlay (Triggered by command or Ctrl+P button) */}
+      {isPresentationMode && <PresentationEnvironment />}
 
       {/* Footer shortcut guides */}
       <Footer />

@@ -6,25 +6,29 @@ import { DatabaseTab } from "../tabs/DatabaseTab";
 import { CryptoTab } from "../tabs/CryptoTab";
 import { QuantumTab } from "../tabs/QuantumTab";
 import { AuditIncidentTab } from "../tabs/AuditIncidentTab";
+import { MitreAttackTab } from "../tabs/MitreAttackTab";
+import { SystemGraphTab } from "../tabs/SystemGraphTab";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface TabWorkspaceProps {
   activeRail: string | null;
 }
 
-type TabType = "telemetry" | "mesh" | "auth" | "db" | "crypto" | "quantum" | "audit";
+type TabType = "telemetry" | "mesh" | "mitre" | "auth" | "db" | "crypto" | "quantum" | "audit" | "graph";
 
 export const TabWorkspace: React.FC<TabWorkspaceProps> = ({ activeRail }) => {
   const [activeTab, setActiveTab] = useState<TabType>("telemetry");
 
   const tabLabels: { id: TabType; label: string }[] = [
-    { id: "telemetry", label: "Telemetry Log" },
+    { id: "telemetry", label: "Telemetry & Filtration" },
     { id: "mesh", label: "Security Mesh" },
+    { id: "mitre", label: "MITRE ATT&CK Map" },
     { id: "auth", label: "Auth steps" },
     { id: "db", label: "Database Search" },
     { id: "crypto", label: "Crypto logs" },
     { id: "quantum", label: "Quantum guard" },
-    { id: "audit", label: "Audits & Incidents" },
+    { id: "audit", label: "WORM Audits & Reporting" },
+    { id: "graph", label: "System Parameter Graph" },
   ];
 
   return (
@@ -62,11 +66,13 @@ export const TabWorkspace: React.FC<TabWorkspaceProps> = ({ activeRail }) => {
           >
             {activeTab === "telemetry" && <TelemetryTab activeRail={activeRail} />}
             {activeTab === "mesh" && <SecurityMeshTab />}
+            {activeTab === "mitre" && <MitreAttackTab />}
             {activeTab === "auth" && <AuthMonitorTab />}
             {activeTab === "db" && <DatabaseTab />}
             {activeTab === "crypto" && <CryptoTab />}
             {activeTab === "quantum" && <QuantumTab />}
             {activeTab === "audit" && <AuditIncidentTab />}
+            {activeTab === "graph" && <SystemGraphTab />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -85,20 +91,22 @@ export const TabWorkspace: React.FC<TabWorkspaceProps> = ({ activeRail }) => {
           border-bottom: var(--border-default);
           padding: 0 10px;
           height: 40px;
+          overflow-x: auto;
         }
         .workspace-tab-btn {
           position: relative;
           background: transparent;
           border: none;
-          padding: 0 20px;
+          padding: 0 14px;
           font-weight: bold;
-          font-size: 12px;
+          font-size: 11px;
           cursor: pointer;
           color: var(--color-text-muted);
           height: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
+          white-space: nowrap;
           transition: color 0.15s;
         }
         .workspace-tab-btn:hover {

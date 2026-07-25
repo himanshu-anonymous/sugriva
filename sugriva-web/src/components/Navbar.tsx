@@ -1,14 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useStore } from "../state/StoreContext";
 import { checkAdminPassword } from "../state/mockEngine";
 import { motion, AnimatePresence } from "framer-motion";
-import { Terminal, Cpu, Lock, Unlock } from "lucide-react";
+import { Terminal, Cpu, Lock, Unlock, PlayCircle, StopCircle } from "lucide-react";
 
 export const Navbar: React.FC = () => {
-  const { role, setRole, writeAudit, triggerUnfreeze, setThreshold, circuitBreaker, setCircuitBreaker, setIsAuthenticated } = useStore();
+  const {
+    role,
+    setRole,
+    writeAudit,
+    triggerUnfreeze,
+    setThreshold,
+    circuitBreaker,
+    setCircuitBreaker,
+    setIsAuthenticated,
+    isPresentationMode,
+    setIsPresentationMode,
+    executeCommand
+  } = useStore();
+
   const [command, setCommand] = useState("");
-  const [consoleLogs, setConsoleLogs] = useState<string[]>(["System initialized. Type 'help' to begin."]);
+  const [consoleLogs, setConsoleLogs] = useState<string[]>([
+    "System initialized. Type 'presentation' or 'help' to begin."
+  ]);
   const [showConsoleTip, setShowConsoleTip] = useState(false);
+
+  // Keyboard shortcut Ctrl+P to toggle Presentation Mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        setIsPresentationMode(!isPresentationMode);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isPresentationMode, setIsPresentationMode]);
 
   const handleCommandSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,12 +46,22 @@ export const Navbar: React.FC = () => {
     const log = `> ${cmd}`;
     setConsoleLogs(prev => [log, ...prev].slice(0, 20));
 
+    // Try executing built-in presentation/engine command
+    const res = executeCommand(cmd);
+    if (res.success) {
+      setConsoleLogs(prev => [res.message, ...prev]);
+      return;
+    }
+
     const parts = cmd.split(" ");
     const action = parts[0].toLowerCase();
 
     if (action === "help") {
       setConsoleLogs(prev => [
         "Commands Sheet:",
+        "  presentation           - Launch Interactive Simulation & Demo Environment",
+        "  /demo                  - Shortcut to Presentation Mode",
+        "  verify worm            - Trigger Cryptographic Merkle Chain Audit Verification",
         "  login admin <password> - Elevate role privileges (pwd: adminpassword)",
         "  login analyst          - Downgrade role to read-only",
         "  unfreeze <vpa>         - Release quarantine locks on VPA (ADMIN)",
@@ -106,7 +143,7 @@ export const Navbar: React.FC = () => {
       await writeAudit("User logged out from administrative tier", "SUCCESS");
       setConsoleLogs(prev => ["Logged out successfully.", ...prev]);
     } else {
-      setConsoleLogs(prev => [`Unknown command: '${cmd}'. Type 'help' for syntax guide.`, ...prev]);
+      setConsoleLogs(prev => [`Unknown command: '${cmd}'. Type 'presentation' or 'help'.`, ...prev]);
     }
   };
 
@@ -117,7 +154,7 @@ export const Navbar: React.FC = () => {
           <span className="logo-text">SUGRIVA</span>
         </div>
         
-        {/* Subtle Green Pulse Ingestion Status */}
+        {/* Ingestion Status */}
         <div className="pipeline-status">
           <motion.div 
             className="status-indicator"
@@ -127,7 +164,7 @@ export const Navbar: React.FC = () => {
           <span className="status-label">INGESTION ACTIVE</span>
         </div>
 
-        {/* Framer motion spinning quantum radar */}
+        {/* Quantum radar */}
         <div className="quantum-radar">
           <motion.div 
             className="radar-spinner"
@@ -146,7 +183,7 @@ export const Navbar: React.FC = () => {
           <Terminal size={14} className="console-icon" />
           <input
             type="text"
-            placeholder="Type console command (e.g. 'help')..."
+            placeholder="Type command (e.g. 'presentation', '/demo')..."
             value={command}
             onChange={(e) => setCommand(e.target.value)}
             onFocus={() => setShowConsoleTip(true)}
@@ -174,8 +211,18 @@ export const Navbar: React.FC = () => {
         </AnimatePresence>
       </form>
 
-      {/* Role and Circuit Breaker Badges */}
+      {/* Presentation Mode Trigger & Badges */}
       <div className="navbar-badges">
+        <button
+          onClick={() => setIsPresentationMode(!isPresentationMode)}
+          className={`presentation-btn ${isPresentationMode ? "presentation-active" : ""}`}
+          title="Toggle Presentation Simulation Mode (Ctrl+P)"
+        >
+          {isPresentationMode ? <StopCircle size={14} /> : <PlayCircle size={14} />}
+          <span>{isPresentationMode ? "PRESENTATION: ACTIVE" : "PRESENTATION MODE"}</span>
+          <span className="shortcut-tag">Ctrl+P</span>
+        </button>
+
         <div className={`breaker-badge ${circuitBreaker === "OPEN" ? "open-state" : "closed-state"}`}>
           {circuitBreaker === "OPEN" ? <Lock size={12} /> : <Unlock size={12} />}
           <span>BREAKER: {circuitBreaker}</span>
@@ -200,20 +247,17 @@ export const Navbar: React.FC = () => {
         .navbar-brand {
           display: flex;
           align-items: center;
-          gap: 20px;
+          gap: 16px;
         }
         .brand-logo {
           display: flex;
           align-items: center;
           gap: 8px;
         }
-        .logo-icon {
-          color: var(--accent-primary);
-        }
         .logo-text {
           font-family: 'Quattrocento', serif;
           font-weight: 700;
-          letter-spacing: 5px;
+          letter-spacing: 4px;
           font-size: 22px;
           color: var(--accent-primary);
         }
@@ -278,7 +322,7 @@ export const Navbar: React.FC = () => {
           border: none;
           background: transparent;
           outline: none;
-          font-size: 13px;
+          font-size: 12px;
           color: var(--color-text);
         }
         .console-dropdown {
@@ -296,6 +340,7 @@ export const Navbar: React.FC = () => {
           display: flex;
           flex-direction: column-reverse;
           gap: 6px;
+          z-index: 1000;
         }
         .console-log-line {
           font-size: 11px;
@@ -310,14 +355,43 @@ export const Navbar: React.FC = () => {
         .navbar-badges {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
+        }
+        .presentation-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background-color: var(--bg-surface-active);
+          border: 1px solid var(--accent-primary);
+          color: var(--accent-primary);
+          padding: 6px 12px;
+          font-weight: bold;
+          font-size: 11px;
+          cursor: pointer;
+          border-radius: 2px;
+          transition: all 0.15s;
+        }
+        .presentation-btn:hover {
+          background-color: #fff5e6;
+        }
+        .presentation-active {
+          background-color: var(--accent-primary);
+          color: #ffffff;
+        }
+        .shortcut-tag {
+          font-size: 9px;
+          opacity: 0.8;
+          background: rgba(0,0,0,0.1);
+          padding: 1px 4px;
+          border-radius: 2px;
+          margin-left: 2px;
         }
         .role-badge {
           background-color: var(--bg-surface-active);
           border: var(--border-default);
-          padding: 6px 12px;
+          padding: 6px 10px;
           font-weight: bold;
-          font-size: 12px;
+          font-size: 11px;
         }
         .role-admin {
           background-color: #fff5e6;
@@ -331,9 +405,9 @@ export const Navbar: React.FC = () => {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 6px 12px;
+          padding: 6px 10px;
           font-weight: bold;
-          font-size: 12px;
+          font-size: 11px;
         }
         .open-state {
           background-color: var(--error-bg);
