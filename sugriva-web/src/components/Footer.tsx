@@ -60,15 +60,11 @@ export const Footer: React.FC = () => {
         </button>
       </div>
 
-      <div className="footer-system-info">
-        <span>SUGRIVA CORE v2.4 // © 2026 Himanshu Patil. All Rights Reserved.</span>
-      </div>
-
       <style>{`
         .footer-container {
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          justify-content: flex-start;
           height: 40px;
           padding: 0 20px;
           background-color: var(--bg-surface);
@@ -96,6 +92,7 @@ export const Footer: React.FC = () => {
           padding: 4px 8px;
           cursor: pointer;
           font-weight: bold;
+          border-radius: 2px;
           transition: all 0.15s;
         }
         .shortcut-btn:hover {
@@ -109,10 +106,6 @@ export const Footer: React.FC = () => {
         .quantum-btn:hover {
           border: 1px solid var(--quantum-color);
           color: var(--quantum-color);
-        }
-        .footer-system-info {
-          font-weight: bold;
-          letter-spacing: 1px;
         }
       `}</style>
     </footer>
