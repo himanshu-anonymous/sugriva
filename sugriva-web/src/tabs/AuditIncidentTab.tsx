@@ -1,11 +1,81 @@
 import React, { useState, useEffect } from "react";
 import { useStore } from "../state/StoreContext";
-import { ShieldAlert, BookOpen, Clock, Send, ShieldCheck, FileText, CheckCircle2 } from "lucide-react";
+import type { TxRecord, AuditLog } from "../state/mockEngine";
+import {
+  ShieldAlert,
+  BookOpen,
+  Clock,
+  Send,
+  ShieldCheck,
+  FileText,
+  CheckCircle2,
+  Code,
+  Terminal,
+  Copy
+} from "lucide-react";
+
+// ISO 20022 XML Generator
+export function generateIso20022Xml(rec: TxRecord): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.10">
+  <FIToFICstmrCdtTrf>
+    <GrpHdr>
+      <MsgId>${rec.id}</MsgId>
+      <CreDtTm>${new Date().toISOString()}</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <SttlmInf>
+        <SttlmMtd>CLRG</SttlmMtd>
+        <ClrSys>
+          <Prtry>${rec.network}</Prtry>
+        </ClrSys>
+      </SttlmInf>
+    </GrpHdr>
+    <CdtTrfTxInf>
+      <PmtId>
+        <EndToEndId>E2E-${rec.id}</EndToEndId>
+        <UETR>c19a4e88-81ff-4a4a-9642-${rec.id.toLowerCase().replace(/[^a-z0-9]/g, '')}</UETR>
+      </PmtId>
+      <IntrBkSttlmAmt Ccy="INR">${rec.amount.toFixed(2)}</IntrBkSttlmAmt>
+      <Dbtr>
+        <Nm>${rec.vpa}</Nm>
+        <PstlAdr>
+          <Ctry>IN</Ctry>
+        </PstlAdr>
+      </Dbtr>
+      <Cdtr>
+        <Nm>merchant_clearing@bank.net</Nm>
+      </Cdtr>
+      <SplmtryData>
+        <Envlp>
+          <SugrivaSecurityHeader>
+            <PqcAlgorithm>ML-KEM-1024 / Kyber-1024</PqcAlgorithm>
+            <HmacDigest>${rec.cryptoLogs.hmacSigner.calculatedSig}</HmacDigest>
+            <RiskScore>${rec.risk.toFixed(4)}</RiskScore>
+            <EscrowStatus>${rec.escrow}</EscrowStatus>
+            <WormMerkleProof>${rec.wormMerkleProof}</WormMerkleProof>
+          </SugrivaSecurityHeader>
+        </Envlp>
+      </SplmtryData>
+    </CdtTrfTxInf>
+  </FIToFICstmrCdtTrf>
+</Document>`;
+}
+
+// RFC 5424 Syslog Generator
+export function generateRfc5424Syslog(log: AuditLog): string {
+  const pri = log.status === "CRITICAL" || log.status === "AUTO_FREEZE" ? 131 : 134;
+  const isoTime = new Date().toISOString();
+  return `<${pri}>1 ${isoTime} sugriva-soc-node01 audit-daemon 4092 ID47 [meta txId="${log.txId || 'GLOBAL'}" role="${log.role}" status="${log.status}" currHash="${log.currHash.substring(0, 12)}"] SUGRIVA_WORM_AUDIT_LOG: ${log.action}`;
+}
 
 export const AuditIncidentTab: React.FC = () => {
   const { auditLogs, incidents, records, verifyWormChain, dispatchOperationalReport, dispatchRegulatoryReport } = useStore();
-  const [activeSub, setActiveSub] = useState<"worm" | "channels" | "incidents">("worm");
+  const [activeSub, setActiveSub] = useState<"worm" | "channels" | "incidents" | "iso20022" | "syslog">("worm");
   const [, setTick] = useState(0);
+
+  // Selected Tx for ISO 20022 XML
+  const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
+  const [copiedStatus, setCopiedStatus] = useState<string | null>(null);
 
   // WORM Chain Verification State
   const [wormStatus, setWormStatus] = useState<{ checked: boolean; isTamperFree: boolean; merkleRoot: string } | null>(null);
@@ -38,10 +108,18 @@ export const AuditIncidentTab: React.FC = () => {
     return `${hrs}h ${mins}m ${secs}s`;
   };
 
+  const activeRecordForXml = records.find(r => r.id === selectedTxId) || records[0];
+
+  const handleCopyXml = (xmlStr: string) => {
+    navigator.clipboard.writeText(xmlStr);
+    setCopiedStatus("Copied ISO 20022 XML!");
+    setTimeout(() => setCopiedStatus(null), 2000);
+  };
+
   return (
     <div className="audit-tab-container">
       <div className="tab-header-row">
-        <h2>Immutable WORM Audit Ledger & Dual-Channel Reporting Registry</h2>
+        <h2>Immutable WORM Audit Ledger, ISO 20022 XML & Syslog Streaming Registry</h2>
       </div>
 
       <div className="tab-navigation">
@@ -50,7 +128,23 @@ export const AuditIncidentTab: React.FC = () => {
           className={`subnav-btn ${activeSub === "worm" ? "active-subnav" : ""}`}
         >
           <BookOpen size={12} />
-          <span>1. Immutable WORM Audit Chain (SHA-256)</span>
+          <span>1. WORM Audit Chain</span>
+        </button>
+
+        <button 
+          onClick={() => setActiveSub("iso20022")} 
+          className={`subnav-btn ${activeSub === "iso20022" ? "active-subnav" : ""}`}
+        >
+          <Code size={12} />
+          <span>2. ISO 20022 XML Messages</span>
+        </button>
+
+        <button 
+          onClick={() => setActiveSub("syslog")} 
+          className={`subnav-btn ${activeSub === "syslog" ? "active-subnav" : ""}`}
+        >
+          <Terminal size={12} />
+          <span>3. RFC 5424 Syslog Stream</span>
         </button>
 
         <button 
@@ -58,7 +152,7 @@ export const AuditIncidentTab: React.FC = () => {
           className={`subnav-btn ${activeSub === "channels" ? "active-subnav" : ""}`}
         >
           <Send size={12} />
-          <span>2. Dual-Channel Reporting Engine</span>
+          <span>4. Dual-Channel Reporting</span>
         </button>
 
         <button 
@@ -66,7 +160,7 @@ export const AuditIncidentTab: React.FC = () => {
           className={`subnav-btn ${activeSub === "incidents" ? "active-subnav" : ""}`}
         >
           <ShieldAlert size={12} />
-          <span>3. Statutory CERT-In Incident Log (6-Hr SLA)</span>
+          <span>5. Statutory CERT-In Log</span>
         </button>
       </div>
 
@@ -74,7 +168,6 @@ export const AuditIncidentTab: React.FC = () => {
         {/* SUB 1: WORM AUDIT CHAIN */}
         {activeSub === "worm" && (
           <div className="audit-workspace">
-            {/* WORM Verification Header Tool */}
             <div className="worm-verifier-bar">
               <div className="bar-info">
                 <ShieldCheck size={16} className="color-success" />
@@ -143,7 +236,85 @@ export const AuditIncidentTab: React.FC = () => {
           </div>
         )}
 
-        {/* SUB 2: DUAL-CHANNEL REPORTING ENGINE */}
+        {/* SUB 2: ISO 20022 XML MESSAGES */}
+        {activeSub === "iso20022" && (
+          <div className="iso-workspace">
+            <div className="iso-control-bar">
+              <div className="tx-selector-group">
+                <span>SELECT TRANSACTION FOR ISO 20022 XML CONVERSION:</span>
+                <select
+                  className="tx-select font-mono"
+                  value={selectedTxId || activeRecordForXml?.id || ""}
+                  onChange={e => setSelectedTxId(e.target.value)}
+                >
+                  {records.map(r => (
+                    <option key={r.id} value={r.id}>
+                      {r.id} | {r.vpa} | ₹{r.amount.toLocaleString()} | [{r.network}]
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {activeRecordForXml && (
+                <div className="iso-actions">
+                  <button
+                    className="iso-btn"
+                    onClick={() => handleCopyXml(generateIso20022Xml(activeRecordForXml))}
+                  >
+                    <Copy size={12} /> {copiedStatus || "Copy ISO 20022 XML"}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {activeRecordForXml ? (
+              <div className="xml-viewer-container font-mono">
+                <div className="xml-header">
+                  <Code size={12} />
+                  <span>ISO 20022 FINANCIAL MESSAGE SCHEMA (pacs.008.001.10) WITH PQC SECURITY HEADERS</span>
+                </div>
+                <pre className="xml-code-block">
+                  {generateIso20022Xml(activeRecordForXml)}
+                </pre>
+              </div>
+            ) : (
+              <div className="empty-row-msg">No transactions available to generate ISO 20022 XML.</div>
+            )}
+          </div>
+        )}
+
+        {/* SUB 3: RFC 5424 SYSLOG STREAM */}
+        {activeSub === "syslog" && (
+          <div className="syslog-workspace">
+            <div className="syslog-header-bar">
+              <div className="bar-info">
+                <Terminal size={14} className="color-primary" />
+                <div>
+                  <strong>RFC 5424 SYSLOG COMPLIANCE AUDIT STREAM</strong>
+                  <div className="sub-text">Standardized Syslog output stream for SIEM & SOC aggregators (Splunk, QRadar, Datadog)</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="syslog-terminal-body font-mono">
+              {auditLogs.length === 0 ? (
+                <div className="log-line">No Syslog entries in buffer...</div>
+              ) : (
+                auditLogs.map((log, i) => {
+                  const sysStr = generateRfc5424Syslog(log);
+                  const isCrit = log.status === "CRITICAL" || log.status === "AUTO_FREEZE";
+                  return (
+                    <div key={i} className={`syslog-line ${isCrit ? "syslog-crit" : ""}`}>
+                      {sysStr}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* SUB 4: DUAL-CHANNEL REPORTING ENGINE */}
         {activeSub === "channels" && (
           <div className="channels-workspace">
             <div className="channels-grid">
@@ -218,7 +389,7 @@ export const AuditIncidentTab: React.FC = () => {
           </div>
         )}
 
-        {/* SUB 3: INCIDENTS LOG */}
+        {/* SUB 5: INCIDENTS LOG */}
         {activeSub === "incidents" && (
           <div className="incidents-workspace">
             <div className="table-wrapper">
@@ -281,7 +452,7 @@ export const AuditIncidentTab: React.FC = () => {
           overflow: hidden;
         }
         .tab-header-row {
-          margin-bottom: 15px;
+          margin-bottom: 10px;
         }
         .tab-header-row h2 {
           margin: 0;
@@ -292,20 +463,21 @@ export const AuditIncidentTab: React.FC = () => {
         }
         .tab-navigation {
           display: flex;
-          gap: 12px;
+          gap: 8px;
           margin-bottom: 12px;
+          flex-wrap: wrap;
         }
         .subnav-btn {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
           background: transparent;
           border: var(--border-default);
           cursor: pointer;
           font-weight: bold;
           font-size: 11px;
           color: var(--color-text-muted);
-          padding: 6px 12px;
+          padding: 5px 10px;
           border-radius: 2px;
           transition: all 0.15s;
         }
@@ -325,7 +497,7 @@ export const AuditIncidentTab: React.FC = () => {
           display: flex;
           flex-direction: column;
         }
-        .audit-workspace, .incidents-workspace, .channels-workspace {
+        .audit-workspace, .incidents-workspace, .channels-workspace, .iso-workspace, .syslog-workspace {
           flex: 1;
           display: flex;
           flex-direction: column;
@@ -411,6 +583,97 @@ export const AuditIncidentTab: React.FC = () => {
         .hash-col { font-family: var(--font-mono); color: var(--color-text-muted); }
         .font-bold { font-weight: bold; }
         .font-mono { font-family: var(--font-mono); }
+        .iso-control-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 15px;
+          background-color: var(--bg-surface-active);
+          border-bottom: var(--border-default);
+          gap: 15px;
+        }
+        .tx-selector-group {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 11px;
+          font-weight: bold;
+          color: var(--color-text-muted);
+        }
+        .tx-select {
+          background-color: var(--bg-primary);
+          border: var(--border-default);
+          padding: 4px 8px;
+          font-size: 11px;
+          color: var(--color-text);
+          border-radius: 2px;
+          outline: none;
+        }
+        .iso-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background-color: var(--accent-primary);
+          color: #ffffff;
+          border: none;
+          padding: 5px 12px;
+          font-size: 11px;
+          font-weight: bold;
+          cursor: pointer;
+          border-radius: 2px;
+        }
+        .xml-viewer-container {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          background-color: #1e1e1e;
+          color: #d4d4d4;
+          padding: 15px;
+          overflow: hidden;
+        }
+        .xml-header {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 10px;
+          font-weight: bold;
+          color: #888888;
+          border-bottom: 1px solid #333;
+          padding-bottom: 8px;
+          margin-bottom: 10px;
+        }
+        .xml-code-block {
+          flex: 1;
+          margin: 0;
+          font-size: 11px;
+          line-height: 1.4;
+          overflow-y: auto;
+          white-space: pre-wrap;
+          color: #ce9178;
+        }
+        .syslog-header-bar {
+          padding: 10px 15px;
+          background-color: var(--bg-surface-active);
+          border-bottom: var(--border-default);
+        }
+        .syslog-terminal-body {
+          flex: 1;
+          background-color: #1e1e1e;
+          color: #00ff88;
+          padding: 15px;
+          font-size: 10px;
+          line-height: 1.6;
+          overflow-y: auto;
+        }
+        .syslog-line {
+          white-space: pre-wrap;
+          word-break: break-all;
+          margin-bottom: 4px;
+        }
+        .syslog-crit {
+          color: #ff5555;
+          font-weight: bold;
+        }
         .channels-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
