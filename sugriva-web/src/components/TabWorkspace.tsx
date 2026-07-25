@@ -6,7 +6,7 @@ import { DatabaseTab } from "../tabs/DatabaseTab";
 import { CryptoTab } from "../tabs/CryptoTab";
 import { QuantumTab } from "../tabs/QuantumTab";
 import { AuditIncidentTab } from "../tabs/AuditIncidentTab";
-import { MitreAttackTab } from "../tabs/MitreAttackTab";
+import { AllAttacksTab } from "../tabs/AllAttacksTab";
 import { SystemGraphTab } from "../tabs/SystemGraphTab";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -14,7 +14,7 @@ interface TabWorkspaceProps {
   activeRail: string | null;
 }
 
-type TabType = "telemetry" | "mesh" | "mitre" | "auth" | "db" | "crypto" | "quantum" | "audit" | "graph";
+type TabType = "telemetry" | "mesh" | "attacks" | "auth" | "db" | "crypto" | "quantum" | "audit" | "graph";
 
 export const TabWorkspace: React.FC<TabWorkspaceProps> = ({ activeRail }) => {
   const [activeTab, setActiveTab] = useState<TabType>("telemetry");
@@ -22,7 +22,7 @@ export const TabWorkspace: React.FC<TabWorkspaceProps> = ({ activeRail }) => {
   const tabLabels: { id: TabType; label: string }[] = [
     { id: "telemetry", label: "Telemetry & Filtration" },
     { id: "mesh", label: "Security Mesh" },
-    { id: "mitre", label: "MITRE ATT&CK Map" },
+    { id: "attacks", label: "All Attacks Monitoring" },
     { id: "auth", label: "Auth steps" },
     { id: "db", label: "Database Search" },
     { id: "crypto", label: "Crypto logs" },
@@ -66,7 +66,7 @@ export const TabWorkspace: React.FC<TabWorkspaceProps> = ({ activeRail }) => {
           >
             {activeTab === "telemetry" && <TelemetryTab activeRail={activeRail} />}
             {activeTab === "mesh" && <SecurityMeshTab />}
-            {activeTab === "mitre" && <MitreAttackTab />}
+            {activeTab === "attacks" && <AllAttacksTab />}
             {activeTab === "auth" && <AuthMonitorTab />}
             {activeTab === "db" && <DatabaseTab />}
             {activeTab === "crypto" && <CryptoTab />}
